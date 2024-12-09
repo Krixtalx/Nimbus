@@ -1,0 +1,57 @@
+#version 450
+#extension GL_NV_gpu_shader5 : enable
+#extension GL_NV_shader_atomic_int64: require
+#extension GL_ARB_compute_variable_group_size: enable
+
+layout(std430, binding = 0) restrict readonly buffer depthBuffer {
+    uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
+};
+
+uniform float zNear, zFar;
+uniform float edlStrength;
+
+ivec2 edlNeighbourhood[4] = { ivec2(1, 0), ivec2(-1, 0), ivec2(0, 1), ivec2(0, -1) };
+
+uint linearizePosition(ivec2 windowPosition, ivec2 windowSize)
+{
+    return windowPosition.y * windowSize.x + windowPosition.x;
+}
+
+float linearize(float depth)
+{
+    return (depth - zNear) / (zFar - zNear);
+}
+
+float response(ivec2 position, ivec2 windowSize)
+{
+    float depth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(position, windowSize)] >> 32))));
+    float sum = 0.0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ivec2 samplePosition = clamp(position + edlNeighbourhood[i].xy, ivec2(0), windowSize - ivec2(1));
+        float neighbourDepth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(samplePosition, windowSize)] >> 32))));
+        sum += max(0.0, depth - neighbourDepth);
+    }
+
+    return sum / float(4);
+}
+
+uniform layout(rgba8) restrict image2D colorOutput;
+
+layout(local_size_variable) in;
+void main() {
+    const uint pixelIndex = gl_GlobalInvocationID.x;
+    const ivec2 imgSize = imageSize(colorOutput);
+    const uint totalPixels = imgSize.x * imgSize.y;
+    if (pixelIndex < totalPixels && uint(_depth[pixelIndex] >> 32) != ~0) { //
+        const uint py = uint(floor(pixelIndex / imgSize.x));
+        const uint px = pixelIndex % imgSize.x;
+        const ivec2 position = ivec2(px, py);
+
+        vec3 color = imageLoad(colorOutput, position).rgb; //vec3(linearize(uint(_depth[pixelIndex]>>32)));
+        float shading = exp(-response(position, imgSize) * edlStrength);
+
+        imageStore(colorOutput, position, vec4(vec3(color * shading), 1.0f));
+    }
+}

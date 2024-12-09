@@ -1,0 +1,583 @@
+id|English|Español
+APP_TITLE|GEU Renderer|GEU Renderer
+AUTOUPDATER_MSG|A new version of the application has been detected. Download updated installer?|Se ha encontrado una nueva versión de la aplicación. ¿Desea descargar el instalador actualizado?
+AUTOUPDATER_TITLE|New version available|Nueva versión disponible
+CAMERA_PROJ_ORTHO|Orthographic|Ortográfica
+CAMERA_PROJ_PERSP|Perspective|Perspectiva
+DATABASE_ADDITIONAL_DATA|Additional data|Datos adicionales
+DATABASE_AUTOFILL|Autofill|Rellenado automático
+DATABASE_AUTOFILL_HELP|The autofill function will fill all the database fields that can be getted from opened file metadata.\nIf any of the database entry already match these fields, it will be selected.|La función de rellenado automático rellenará todos los campos de la base de datos que se pueda extraer de los metadatos.\nSi alguna entrada de la base de datos coincide con estos datos extraidos, se seleccionará.
+DATABASE_CAMARA|Camera|Cámara
+DATABASE_CAMARA_FABRICANTE|Manufacturer|Fabricante
+DATABASE_CAMARA_MODELO|Model|Modelo
+DATABASE_CONNECTION_REQUIRED|Database connection is required|Se requiere conexión a la base de datos
+DATABASE_DATO|Datum|Dato
+DATABASE_DATO_DESCRIPTION|Description|Descripción
+DATABASE_DATO_DISTINTIVO|Distinctive|Distintivo
+DATABASE_DATO_DUPLICATED_INSERT|New data already has an entry in remote database|El nuevo dato ya se encontraba en la base de datos remota
+DATABASE_DATO_FAILED_INSERT|There was an error while inserting the new data|Error al insertar el nuevo dato.
+DATABASE_DATO_FAILED_UPLOAD|There was an error while uploading the new data to NAS|Error al subir el dato al NAS
+DATABASE_DATO_NOMBRE|Name|Nombre
+DATABASE_DATO_PROCESADO|Processed|Procesado
+DATABASE_DATO_RUTA|URL|Ruta URL
+DATABASE_DATO_SOFTWARE|Software|Software
+DATABASE_DATO_SUCCESSFUL_INSERT|New data inserted sucessfully|Nuevo dato insertado con éxito
+DATABASE_DATO_SUCCESSFUL_UPLOAD|New data uploaded to NAS sucessfully|Dato subido al NAS con éxito
+DATABASE_DATO_TIPO|Type|Tipo
+DATABASE_DATO_DOWNLOAD_OVERWRITE|This data is already downloaded locally.\nDownload and overwrite?|Este dato ya se encuentra descargado localmente.\n¿Volver a descargar y sobreescribir?
+DATABASE_DRON|Drone|Dron
+DATABASE_DRON_CARGA|Load|Carga
+DATABASE_DRON_CATEGORIA|Category|Categoría
+DATABASE_DRON_FABRICANTE|Manufacturer|Fabricante
+DATABASE_DRON_FABRICANTE_REFRESH|Refresh available manufacturer list|Refresca el listado de fabricantes
+DATABASE_DRON_MODELO|Model|Modelo
+DATABASE_DRON_REGISTRO|Record|Registro
+DATABASE_DRON_RTK|RTK|RTK
+DATABASE_DRON_VARIANTE|Variant|Variante
+DATABASE_EXCEPTION_TITLE|Database error|Error en la base de datos
+DATABASE_FINCA|Property|Finca
+DATABASE_FINCA_AREA|Area|Area
+DATABASE_FINCA_PARCELA|Plot|Parcela
+DATABASE_FINCA_POLIGONO|Polygon|Polígono
+DATABASE_FINCA_RECINTO|Enclosure|Recinto
+DATABASE_FINCA_USE|Assign property?|¿Asignar finca?
+DATABASE_GPS_LATITUD|Latitude|Latitud
+DATABASE_GPS_LONGITUD|Longitude|Longitud
+DATABASE_GPS_RADIO|Radius|Radio
+DATABASE_LOCAL_DOWNLOADS|Downloaded data|Datos descargados
+DATABASE_LOCAL_DOWNLOADS_COUNT|Data paths found:|Directorios encontrados:
+DATABASE_LOCAL_DOWNLOADS_NODATA|Data not found in database|El dato no se ha encontrado en la base de datos.
+DATABASE_LOCAL_DOWNLOADS_OPENDIR|Open directory|Abrir directorio
+DATABASE_LOCAL_DOWNLOADS_REDOWNLOAD|Download again|Volver a descargar
+DATABASE_LOCAL_DOWNLOADS_REDOWNLOAD_TOOLTIP|Download this data again from NAS server.\nCan be used to update old data and prevent manually querying the database.|Vuelve a descargar este dato desde el servidor NAS.\nPuede utilizarse para actualizar datos antiguos y evitar consultar manualmente la base de datos.
+DATABASE_MUNICIPIO|City|Municipio
+DATABASE_MUNICIPIO_CODMUNICIPIO|City code|Código municipal
+DATABASE_NEWRAW_VUELOHELP|An area must be selected before assigning flight data.|Debe seleccionar una zona antes de asignar datos del vuelo.
+DATABASE_NORAWDATA|No data found|No se han encontrado datos
+DATABASE_OBJETO|Object|Objeto
+DATABASE_OBJETO_TIPO|Type|Tipo
+DATABASE_OBJETO_POLIGONO|Polygon|Polígono
+DATABASE_PROVINCIA|Province|Provincia
+DATABASE_QUERY|Query database|Consultar base de datos
+DATABASE_QUERY_BUTTON|Query|Consultar
+DATABASE_QUERY_QUERYING|Querying...|Consultando...
+DATABASE_SENSOR|Sensor|Sensor
+DATABASE_SENSOR_FABRICANTE|Manufacturer|Fabricante
+DATABASE_SENSOR_TIPO|Type|Tipo
+DATABASE_UPLOAD_DUPLICATED|Data already exists in database, no changes will apply to entry.|Este dato ya existe en la base de datos, no se realizarán cambios en su entrada.
+DATABASE_USEFILTER|Use filter?|¿Usar filtro?
+DATABASE_VUELO|Flight|Vuelo
+DATABASE_VUELO_ALTITUD|Altitude|Altitud
+DATABASE_VUELO_ATERRIZAJES|Landings|Aterrizajes
+DATABASE_VUELO_CAMARA_FAILED_INSERT|Failed to insert a new relation between Vuelo and Camara|Error al insertar la relación entre Vuelo y Cámara
+DATABASE_VUELO_CAMARA_SUCCESSFUL_INSERT|Relation betweet Vuelo and Camara inserted successfully|Relación entre Vuelo y Cámara insertada con éxito
+DATABASE_VUELO_DURACION|Flight duration|Duración del Vuelo
+DATABASE_VUELO_FAILED_INSERT|There was an error while inserting the new flight|Error al insertar el nuevo vuelo.
+DATABASE_VUELO_FECHA|Date|Fecha
+DATABASE_VUELO_HORAFIN|Finishing time|Hora de finalización
+DATABASE_VUELO_HORAINICIO|Starting time|Hora de inicio
+DATABASE_VUELO_INCIDENCIAS|Incidences|Incidencias
+DATABASE_VUELO_RANGOFECHA_END|To date|Hasta la fecha
+DATABASE_VUELO_RANGOFECHA_INI|From date|Desde la fecha
+DATABASE_VUELO_SOLAPE|Overlap|Solape
+DATABASE_VUELO_SOLAPE_LONGITUDINAL|Longitudinal overlap|Solape longitudinal
+DATABASE_VUELO_SOLAPE_TRANSVERSAL|Transversal overlap|Solape transversal
+DATABASE_VUELO_SUCCESSFUL_INSERT|New flight inserted sucessfully|Nuevo vuelo insertado con éxito
+DATABASE_VUELO_USARRANGOFECHA|Use date range|Usar rango de fechas
+DATABASE_VUELO_VELOCIDAD|Speed|Velocidad
+DATABASE_ZONA|Area|Zona
+DATABASE_ZONA_DESCRIPCION|Description|Descripción
+DATABASE_ZONA_FAILED_INSERT|There was an error while inserting the new zone|Error al insertar la nueva zona.
+DATABASE_ZONA_RADIOCOMP|Radius comparison|Comparación del radio
+DATABASE_ZONA_RADIORANGE|Radius range|Rango del radio
+DATABASE_ZONA_SUCCESSFUL_INSERT|New zone inserted sucessfully|Nueva zona insertada con éxito
+DATABASE_ZONA_UBICACION|Ubication|Ubicación
+DATABASE_ZONA_GEOFORMAT|Geolocation data is given in Latitude and Longitude (WSG84) for the central point.|Los datos de geolocalización vienen dados en Latitud/Longitud (WSG84) para el punto central.
+DETAILS_3DPARAMS|3D parameters|Parámetros 3D
+DETAILS_AABB_CENTER|Center|Centro
+DETAILS_AABB_EXTENT|Extent|Extensión
+DETAILS_AABB_MAX|Maximum point|Punto máximo
+DETAILS_AABB_MIN|Minimum point|Punto mínimo
+DETAILS_BAND|Band|Banda
+DETAILS_CAM_ACTIVE|Active camera|Cámara activa
+DETAILS_CAM_LOOKAT|Look at|Mirando a
+DETAILS_CAM_ORTHOCOORDS|Bottom left corner|Esquina inferior izquierda
+DETAILS_CAM_PROJECTION|Camera type|Tipo de cámara
+DETAILS_CAM_ZNEAR|Z near|Z cercano
+DETAILS_CAM_ZFAR|Z far|Z lejano
+DETAILS_CAM_FOVY|Vertical field of vision|Campo de visión vertical
+DETAILS_COLORS|Colors|Colores
+DETAILS_ENABLED|Enabled|Activo
+DETAILS_IMAGE_TEXVIEW|Texture viewer|Ver textura
+DETAILS_LIGHT_ATTN|Attenuation|Atenuación
+DETAILS_LIGHT_ATTN_C1|C1|C1
+DETAILS_LIGHT_ATTN_C2|C2|C2
+DETAILS_LIGHT_ATTN_C3|C3|C3
+DETAILS_LIGHT_COLOR_IA|Ia|Ia
+DETAILS_LIGHT_COLOR_ID|Id|Id
+DETAILS_LIGHT_COLOR_IS|Is|Is
+DETAILS_LIGHT_COLOR_SMOOTHING|Spot Smoothing Factor|Factor de suavizado
+DETAILS_LIGHT_COLOR_PENUMBRACOS|Penumbra cosine|Coseno de penumbra
+DETAILS_LIGHT_COLOR_UMBRACOS|Umbra cosine|Coseno de umbra
+DETAILS_LIGHT_DIRECTION|Direction|Dirección
+DETAILS_LIGHT_DISTANCE|Distance|Distancia
+DETAILS_LIGHT_MAXDISTANCE|Maximum distance|Distancia máxima
+DETAILS_LIGHT_MINDISTANCE|Minimum distance|Distancia mínima
+DETAILS_LIGHT_PIXAR_C|C|C
+DETAILS_LIGHT_PIXAR_CDIST|C (Distance)|C (Distancia)
+DETAILS_LIGHT_PIXAR_MAXATTNFACT|Maximum attenuation factor|Factor de atenuación máxima
+DETAILS_LIGHT_PIXAR_SEEXP|SE Exponent|Exponente SE
+DETAILS_LIGHT_PIXAR_K0|k0|k0
+DETAILS_LIGHT_PIXAR_K1|k1|k1
+DETAILS_LIGHT_TYPE|Light type|Tipo de luz
+DETAILS_MATS_LAYER|Layer|Capa
+DETAILS_MATS_NOTEXTURE|No texture set|No hay textura asignada
+DETAILS_MATS_PROPDISP|Displacement factor|Factor de desplazamiento
+DETAILS_MATS_PROPERTIES|Material properties|Propiedades del material
+DETAILS_MATS_PROPSHINE|Shininess|Brillo
+DETAILS_MATS_SHADSUBROUT|Shader subroutines|Subrutinas de sombreador
+DETAILS_MATS_TEXTURES|Textures|Texturas
+DETAILS_MATS_UNAVAILABLE|Material unavailable|Material no disponible
+DETAILS_MESH_COMPONENT|Component|Componente
+DETAILS_MESH_COMPONENTS|Components|Componentes
+DETAILS_MESH_VERTCOUNT|Vertex count|Número de vértices
+DETAILS_VIEW_MODE|View mode|Modo de renderizado
+DETAILS_NORMALS_VIEW|Show normals|Ver normales
+DETAILS_NOSELECTION|No selection|No hay selección
+DETAILS_PCLOUD_NOSUBCLOUD|No sub-point cloud available|No hay sub-nubes de puntos disponibles
+DETAILS_PCLOUD_POINTCOUNT|Point count|Número de puntos
+DETAILS_PCLOUD_SUBCLOUDS|Sub-point clouds|Sub-nubes de puntos
+DETAILS_PCLOUD_DEBUGVIEW|Debug view|Visualización debug
+DETAILS_POSITION|Position|Posición
+DETAILS_ROTATION|Rotation|Rotación
+DETAILS_SCALE|Scale|Escalado
+DETAILS_SCAN_ANGLE_THRESHOLD|Scan angle threshold|Limite de angulo de escaneo
+DIGITAL_TERRAIN_MODEL|DTM (Digital terrain model)|MDT (Modelo digital del terreno)
+EMPTY||
+ERROR_PCLOUD_SAVE|Error while saving point cloud|Ha ocurrido un error al guardar la nube de puntos
+FILEDIALOG_DRIVES|Drives|Unidades
+FILEDIALOG_SEARCH|Search:|Buscar:
+FILEDIALOG_FILENAME|File name|Nombre del fichero
+FILEDIALOG_DIRPATH|Directory path|Ruta del directorio
+FILEDIALOG_RESETSEARCH|Reset search|Reiniciar búsqueda
+FILEDIALOG_EDITPATH|Edit path\nYou can also right click on path buttons|Editar ruta\nTambién es posible utilizar clic secundario sobre los botones de la ruta
+FILEDIALOG_RESETPATH|Reset to current directory|Establecer directorio actual
+FILEDIALOG_CREATEDIR|Create directory|Crear directorio
+FILEDIALOG_TYPE|Type|Tipo
+FILEDIALOG_SIZE|Size|Tamaño
+FILEDIALOG_DATE|Date|Fecha
+FILEDIALOG_OVERWRITE_INFO|The file already exists!|El fichero ya existe
+FILEDIALOG_OVERWRITE_QUESTION|Would you like to overwrite it?|¿Desea sobreescribir el fichero?
+FILEDIALOG_MANYSELECTED|files selected|ficheros seleccionados
+FILEDIALOG_OPEN_ERRORCLOUD|Error while opening point cloud file|Error al abrir fichero de nube de puntos
+GENERIC_AABB|AABB|AABB
+GENERIC_ALPHA|Alpha|Alpha
+GENERIC_APPLY|Apply|Aplicar
+GENERIC_ATTRIBUTE|Attribute|Atributo
+GENERIC_AUTOMATIC|Automatic|Automático
+GENERIC_CANCEL|Cancel|Cancelar
+GENERIC_CLEAR|Clear|Limpiar
+GENERIC_CLOSE|Close|Cerrar
+GENERIC_COLOR|Color|Color
+GENERIC_CONFIRM|Confirm|Confirmar
+GENERIC_CONNECT|Connect|Conectar
+GENERIC_CONECTION|Conection|Conexión
+GENERIC_DATABASE|Database|Base de datos
+GENERIC_DATE_DAY|Day|Día
+GENERIC_DATE_DAY1|Monday|Lunes
+GENERIC_DATE_DAY2|Tuesday|Martes
+GENERIC_DATE_DAY3|Wednesday|Miércoles
+GENERIC_DATE_DAY4|Thursday|Jueves
+GENERIC_DATE_DAY5|Friday|Viernes
+GENERIC_DATE_DAY6|Saturday|Sábado
+GENERIC_DATE_DAY7|Sunday|Domingo
+GENERIC_DATE_DAY1_LETTER|M|L
+GENERIC_DATE_DAY2_LETTER|T|M
+GENERIC_DATE_DAY3_LETTER|W|X
+GENERIC_DATE_DAY4_LETTER|T|J
+GENERIC_DATE_DAY5_LETTER|F|V
+GENERIC_DATE_DAY6_LETTER|S|S
+GENERIC_DATE_DAY7_LETTER|S|D
+GENERIC_DATE_MONTH|Month|Mes
+GENERIC_DATE_MONTH01|January|Enero
+GENERIC_DATE_MONTH02|February|Febrero
+GENERIC_DATE_MONTH03|March|Marzo
+GENERIC_DATE_MONTH04|April|Abril
+GENERIC_DATE_MONTH05|May|Mayo
+GENERIC_DATE_MONTH06|June|Junio
+GENERIC_DATE_MONTH07|July|Julio
+GENERIC_DATE_MONTH08|August|Agosto
+GENERIC_DATE_MONTH09|September|Septiembre
+GENERIC_DATE_MONTH10|October|Octubre
+GENERIC_DATE_MONTH11|November|Noviembre
+GENERIC_DATE_MONTH12|December|Diciembre
+GENERIC_DELETE|Delete|Eliminar
+GENERIC_DIRECTORY|Directory|Directorio
+GENERIC_DISCONNECT|Disconnect|Desconectar
+GENERIC_DOWNLOAD|Download|Descargar
+GENERIC_EMAIL|Email|Correo electrónico
+GENERIC_ERROR|Error|Error
+GENERIC_ERROR_INFO|An error ocurred.|Se ha producido un error.
+GENERIC_EXPORT|Export|Exportar
+GENERIC_GEOLOCATION|Geolocation|Geolocalización
+GENERIC_HELP|Help|Ayuda
+GENERIC_ID|ID|ID
+GENERIC_IDENTIFIER|Identifier|Identificador
+GENERIC_IMPORT|Import|Importar
+GENERIC_IN_PROGRESS_DOWNLOAD_NAS|Downloading file from NAS...|Descargando fichero desde el NAS...
+GENERIC_IN_PROGRESS_INSERT_DATABASE|Inserting data into database...|Insertando dato en la base de datos...
+GENERIC_IN_PROGRESS_UPLOAD_NAS|Uploading file to NAS...|Subiendo fichero al NAS...
+GENERIC_INFO|Info|Información
+GENERIC_INSERT|Insert|Insertar
+GENERIC_INTENSITY|Intensity|Intensidad
+GENERIC_IP|IP|IP
+GENERIC_ITEM|Item(s)|Elemento(s)
+GENERIC_LOADING|Loading|Cargando
+GENERIC_LOGIN|Log in|Iniciar sesión
+GENERIC_LOGOUT|Log out|Cerrar sesión
+GENERIC_MANUAL|Manual|Manual
+GENERIC_MESHLET|Meshlet(s)|Meshlet(s)
+GENERIC_NAME|Name|Nombre
+GENERIC_NAS|NAS|NAS
+GENERIC_NEW|New|Nuevo
+GENERIC_NO|No|No
+GENERIC_NODATA|No data|No hay datos
+GENERIC_NONE|None|Ninguno
+GENERIC_NOSELECTION|No selection|No hay selección
+GENERIC_OFFSET|Offset|Offset
+GENERIC_OPEN|Open|Abrir
+GENERIC_OPTIONAL|Optional|Opcional
+GENERIC_PASSWORD|Password|Contraseña
+GENERIC_PAUSED|Paused|Pausado
+GENERIC_POINT|Point(s)|Punto(s)
+GENERIC_PREVIEW|Preview|Previsualizar
+GENERIC_REFRESH|Refresh|Refrescar
+GENERIC_RESET|Reset|Reiniciar
+GENERIC_SEGMENT|Segment|Segmento
+GENERIC_SELECT|Select|Seleccionar
+GENERIC_SUCCESS|Success|Éxito
+GENERIC_UPLOAD|Upload|Subir
+GENERIC_USERMANUAL|User manual|Manual de usuario
+GENERIC_USERNAME|Username|Usuario
+GENERIC_WARNING|Warning|Aviso
+GENERIC_YES|Yes|Sí
+HIPER_CUBENAME|Current hypercube:|Hipercubo activo:
+HIPER_NOHYPERCUBE|No hypercube loaded|No se ha cargado ningún hipercubo
+HIPER_LOADCUBE|Load hypercube|Cargar hipercubo
+HIPER_PIXEL|Pixel|Píxel
+HIPER_PIXELPREVIEW|Current pixel:|Píxel seleccionado:
+HIPER_PREVIEW|Preview bands|Previsualizar bandas
+HIPER_PROGRESS_INPUTCUBE|Reading hypercube|Leyendo hipercubo
+HIPER_PROGRESS_FLUSHDATA|Flushing hypercube cache|Limpiando caché del hipercubo
+HIPER_PROGRESS_FUSINGDATA|Fusing data|Fusionando datos
+HIPER_PROGRESS_DONE|Done! ({} seconds)|¡Hecho! ({} segundos)
+HIPER_STATS_HISTOGRAM|Histogram|Histograma
+HIPER_STATS_SELECTPIXEL|Click over the image preview to get pixel statistics.|Haga click sobre la imagen para obtener estadísticas del píxel.
+HIPER_STATS_SHAPE|Shape|Forma
+HIPER_STATS_SHAPE_KURTOSIS|Kurtosis|Curtosis
+HIPER_STATS_SHAPE_SKEWNESS|Skewness (Pearson)|Asimetría (Pearson)
+HIPER_STATS_SPREAD|Spread|Dispersión
+HIPER_STATS_SPREAD_STDEV|Standard deviation|Desviación estándar
+HIPER_STATS_SPREAD_VARIANCE|Variance|Varianza
+HIPER_FUSE|Fuse hyperspectral data|Fusionar datos hiperespectrales
+HIPER_REFLECT|Reflectance|Reflectancia
+HIPER_REFLECT_NORM|Normalized reflectance|Reflectancia normalizada
+HIPER_RED_RANGE|RED wave length range|Rango de longitud de onda RED
+HIPER_NIR_RANGE|NIR wave length range|Rango de longitud de onda NIR
+HIPER_PREVIEW_LOADPX|Preview data|Previsualizar datos
+HIPER_LOAD_SEGMENTS|Load segments|Cargar segmentos
+HIPER_SEGMENTS_FILE|Segments file|Fichero de segmentación
+HIPER_COMPARE_SEGMENTS_SELECTED|Compare selection|Comparar selección
+HIPER_COMPARE_SEGMENTS_ALL|Compare all|Comparar todo
+MENUBAR_CONTENT|Content|Contenidos
+MENUBAR_CONTENT_IMPORTCLOUD|Import point cloud|Importar nube de puntos
+MENUBAR_CONTENT_IMPORTIMAGE|Import image|Importar imagen
+MENUBAR_CONTENT_IMPORTMESH|Import triangle mesh|Importar malla
+MENUBAR_CONTENT_NEWCAMERA|New camera|Añadir cámara
+MENUBAR_CONTENT_NEWLIGHT|New light|Añadir luz
+MENUBAR_DB_EXPORTDATA|Export processed data|Exportar datos procesados
+MENUBAR_DB_EXPORTRESULT_INFO|Resulting data will be uploaded to remote servers. Confirm?|Los datos resultantes serán subidos a los servidores remotos. ¿Confirmar?
+MENUBAR_DB_LISTRAWDATA|List data|Listar datos
+MENUBAR_FILE|File|Fichero
+MENUBAR_FILE_ACTIVESCENES|Active scenes|Escenas activas
+MENUBAR_FILE_CLOSEALL|Close all|Cerrar todo
+MENUBAR_FILE_CLOSESCENE|Close scene|Cerrar escena
+MENUBAR_FILE_NEWSCENE|New scene|Nueva escena
+MENUBAR_FILE_OPENSCENE|Open scene|Abrir escena
+MENUBAR_FILE_QUIT|Quit|Salir
+MENUBAR_FILE_SAVEAS|Save as|Guardar como
+MENUBAR_FILE_SAVESCENE|Save scene|Guardar escena
+MENUBAR_WINDOWS|Windows|Ventanas
+MODULE_ANALISIS_HYPER|Hyperspectral analysis|Análisis hiperespectral
+MODULE_EXPERIMENTAL|Experimental|Experimental
+MODULE_FUSION|Fusion|Fusión
+MODULE_HIPERESPECTRAL|Hyperspectral|Hiperespectral
+MODULE_MULTIESPECTRAL|Multispectral|Multiespectral
+MODULE_NORMALS|Normal comparison|Comparación de normales
+MODULE_THERMAL|Thermal|Térmica
+MODULE_RECONSTRUCCION|Point cloud densification|Densificación de la nube de puntos
+MODULE_SEGMENTATION|Tree segmentation|Segmentación de árboles
+MODULE_SPECTRALANALYSIS|Spectral analysis|Análisis espectral
+MULTIESP_CALIBRATION_NEEDCHECK|Need calibration file?|¿Utilizar fichero de calibración?
+MULTIESP_CALIBRATIONFILE_OPEN|Open calibration file|Abrir fichero de calibración
+MULTIESP_CAMDIR_DEFAULT_VALUE|Images directory has not been selected|No se ha seleccionado el directorio con las imágenes
+MULTIESP_CAMDIR_OPEN|Select images directory|Seleccionar el directorio de imágenes
+MULTIESP_CAMERAS_NONE|No camera available|No hay cámaras disponibles
+MULTIESP_CAMFILE_DEFAULT_VALUE|Cameras file has not been selected|No se ha seleccionado el fichero de cámaras
+MULTIESP_CAMFILE_OPEN|Open cameras file|Abrir fichero de cámaras
+MULTIESP_CLEAR|Clear data|Borrar datos
+MULTIESP_FUSION_TABNAME|Data fusion|Fusión de datos
+MULTIESP_GRADIENT_REFLECT|Reflectance gradient|Gradiente de reflectancia
+MULTIESP_ICP_NEEDCHECK|Need ICP alignment?|¿Necesita fichero de alineamiento?
+MULTIESP_OFFSET_NEEDCHECK|Need offset?|¿Aplicar offset?
+MULTIESP_ICPFILE_DEFAULT_VALUE|The ICP transformation matrix has not been selected|No se ha seleccionado el fichero con la matriz de transformación ICP
+MULTIESP_ICPFILE_OPEN|Open ICP matrix file|Abrir fichero con matriz ICP
+MULTIESP_KVALSFILE_DEFAULT_VALUE|The calibration file has not been selected|No se ha seleccionado el fichero de calibración
+MULTIESP_MAPPING|3D mapping|Mapeo 3D
+MULTIESP_PROGRESS_END|Finishing process...|Finalizando proceso...
+MULTIESP_PROGRESS_PROJECTION|Starting projection process...|Iniciando proceso de proyección...
+MULTIESP_PROGRESS_START|Calculating normals...|Calculando normales...
+MULTIESP_PROGRESS_STATUS|Projection progress:|Progreso de la proyección:
+MULTIESP_MAKER|Manufacturer|Fabricante
+MULTIESP_MODEL|Model|Modelo
+MULTIESP_IMGS_FOUND|images found|imágenes encontradas
+MULTIESP_SFM_IMAGES|images from SFM metadata found|imágenes en los metadatos SFM
+MULTIESP_MISMATCH_IMGS|Mismatch between the number of camera poses from SFM and the number of files in selected images folder|El número de cámaras en el fichero SFM no coincide con el número de ficheros en la carpeta de imágenes seleccionada.
+MULTIESP_OFFSETFILE_OPEN|Open offset file|Abrir fichero de offset
+GENERIC_COMPATIBLE|Compatible|Compatible
+GENERIC_INCOMPATIBLE|Incompatible|Incompatible
+NAS_ERROR_NOTLOGGED|No session active with NAS server|No se ha iniciado sesión en el servidor NAS
+NAS_FAILED_DOWNLOAD|There was an error while downloading data from NAS|Ha habido un error durante la descarga de datos del NAS
+NAS_FAILED_UPLOAD|There was an error while uploading data to NAS|Ha habido un error durante la subida de datos al NAS
+NAS_NOT_LOGGED_ERROR|You must be logged in the NAS before uploading a new file|Debe iniciar sesion en el NAS antes de subir cualquier fichero
+NAS_SUCCESSFUL_DOWNLOAD|The data download from NAS was succesful|Se ha completado con éxito la descarga de datos del NAS
+NORMALS_COMPARISON_COMPARE|Compare|Comparar
+NORMALS_COMPARISON_FIRST|First cloud|Primera nube
+NORMALS_COMPARISON_PROGRESS|Comparison progress:|Progreso de la comparación:
+NORMALS_COMPARISON_SECOND|Second cloud|Segunda nube
+NORMALS_COMPARISON_TABNAME|Normals comparison|Comparación de normales
+NORMALS_COMPUTE_END|Finishing normal computation...|Finalizando cómputo de normales...
+NORMALS_COMPUTE_RUN|Compute|Computar
+NORMALS_COMPUTE_START|Starting normal computation...|Iniciando cómputo de normales...
+NORMALS_COMPUTE_TABNAME|Normals computation|Cómputo de normales
+NURBSS_SCENEITEM_DEGREE|Nurbss Degree|Grado de la Nurbss
+NURBSS_SCENEITEM_SUBDIVISIONS|Internal subdivisions|Subdivisiones internas
+NURBSS_SCENEITEM_DENSITY|Density multiplier|Multiplicador de densidad
+NURBSS_SCENEITEM_GENERATE|Generate nurbs cloud|Generar nube con nurbs
+NURBSS_SCENEITEM_POINT_DISTRIBUTION|Generate points based on internal point distribution|Generar puntos basandonos en la distribución interna de los puntos
+PICKING_AREAPOINTS|Area picking|Selección de área
+PICKING_BEGIN|Start picking|Iniciar selección
+PICKING_CLEARHISTORY|Clear history|Limpiar historial
+PICKING_COUNT|Picked count|Puntos seleccionados
+PICKING_DATA|Picked data|Datos de la selección
+PICKING_POINT_TEMPERATURE|Temperature|Temperatura
+PICKING_POINT_PRECISION|Point picking precision|Precisión al seleccionar puntos
+PICKING_SELECT_VALUE_PRECISION|Value comparision precision|Precisión de la comparación
+PICKING_SELECT_THERMAL|Select same temperature points|Seleccionar puntos con misma temperatura
+PICKING_TITLE|Point cloud picking|Selección en nube de puntos
+PICKING_METHOD|Picking method|Modo de selección
+PICKING_SINGLEPOINT|Single point|Punto
+PICKING_SINGLEPOINT_TOOLTIP|Use left click to select nearest point to cursor position.|Utilize el botón izquierdo del ratón para seleccionar el punto más cercano al puntero.
+PICKING_AREAPOINT|Points area|Área de puntos
+PICKING_AREA_TOOLTIP|Press and hold left click to select all points in marked region.|Pulse y mantenga el botón izquierdo del ratón para seleccionar los puntos dentro de la región marcada.
+PICKING_BOTHAREAS|Area points & meshlets|Área de puntos y meshlets
+PICKING_FOCUSMESHLET|Single meshlet|Meshlet
+PICKING_FOCUSMESHLET_TOOLTIP|Use left click to select nearest meshlet to cursor position.|Utilize el botón izquierdo del ratón para seleccionar el meshlet más cercano al puntero.
+PICKING_AREAMESHLET|Meshlets area|Área de meshlets
+PICKING_AREAMESHLET_TOOLTIP|Press and hold left click to select all meshlets in marked region.|Pulse y mantenga el botón izquierdo del ratón para seleccionar los meshlets dentro de la región marcada.
+PICKING_STATS|Selection|Selección
+PICKING_STATS_COUNT|Selection count|Elementos seleccionados
+PICKING_STATS_DATAFUSED|Fused data|Datos de fusión
+PICKING_GIZMO|Selection markers|Marcadores de selección
+PICKING_GIZMO_SHOW|Show selection gizmos|Ver marcadores de selección
+PICKING_GIZMO_SHOWDEBUG|Show debug gizmos|Ver marcadores de depuración
+PICKING_GIZMO_COLOR|Color|Color
+PICKING_GIZMO_THICKNESS|Thickness|Grosor
+PICKING_ELAPSEDTIME|Elapsed picking time:|Tiempo de selección:
+PICKING_STATISTICS|Statistics|Estadísticas
+PICKING_STATS_ALLPOINTS|AllPoints|AllPoints
+PICKING_STATS_MEANLETS|Meanlets|Meanlets
+POINT_CLOUD_VALIDATION|Point cloud for validation|Nube de puntos para validación
+POPUP_CLOUDCLASS|Clasiffication|Clasificación
+POPUP_CLOUDCLASS_INFO|Use classification?|¿Usar clasificación?
+POPUP_CONFIRM_SAVE|Save changes?|¿Guardar cambios?
+POPUP_ERROR|Error|Error
+POPUP_EXPORT_CLOUD|Export point cloud|Exportar nube de puntos
+POPUP_INFO|Information|Información
+POPUP_OPEN_FILE|Open file|Abrir fichero
+POPUP_OPEN_IMAGE|Open image|Abrir imagen
+POPUP_OPEN_SCENE|Open scene|Abrir escena
+POPUP_PROGRESS_CLOSEONEND|Close on end|Cerrar al finalizar
+POPUP_PROGRESS_DOWNLOADING|Downloading...|Descargando...
+POPUP_PROGRESS_OPENINGCLOUD|Opening point cloud...|Abriendo nube de puntos...
+POPUP_PROGRESS_SORTINGCLOUD|Spatially sorting point cloud...|Ordenando espacialmente la nube de puntos...
+POPUP_PROGRESS_MERGINGCLOUD|Merging point clouds...|Uniendo nubes de puntos...
+POPUP_PROGRESS_OPENINGMESH|Opening 3D model...|Abriendo modelo 3D...
+POPUP_PROGRESS_UPLOADING|Uploading...|Subiendo...
+POPUP_RAWDBDATA|Select data|Seleccionar datos
+POPUP_RAWDBDATA_CURRENTSELECT|Current selection:|Selección actual:
+POPUP_RAWDBDATA_NOSELECT|No item selected|No hay selección
+POPUP_SAVE_SCENE|Save scene|Guardar escena
+POPUP_UNSAVED_QUIT|Unsaved changes, quit anyway?|Existen cambios sin guardar. ¿Salir de la aplicación?
+POPUP_UNSAVED_WARN|Unsaved changes, continue?|Existen cambios sin guardar. ¿Continuar?
+POPUP_WARNING|Warning|Aviso
+RECOMPILE_SHADERS|Recompile shaders|Recompilar shaders
+RECONSTRUCCION_CLOUD_CLASSIFICATION|Only classified clouds|Solo nubes clasificadas
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_TABNAME|RGB region segmentation|Segmentación de regiones RGB
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_DISTANCE|Distance threshold|Distancia umbral
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_POINT_COLOR|Point color threshold|Umbral de color de los puntos
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_REGION_COLOR|Region color threshold|Umbral de color de la región
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_MIN_CLUSTER|Min cluster size|Tamaño mínimo del cluster
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_BUTTON|Generate RGB region segmentation|Generar segmentación de regiones RGB
+RECONSTRUCCION_RGB_REGION_SEGMENTATION_WARNING|"""""""High vegetation"""" clasification not found"""|"""Clasificación """"High vegetation"""" no encontrada"""
+RECONSTRUCCION_VOXEL_GRID_TABNAME|Voxel Grid|Malla de vóxeles
+RECONSTRUCCION_VOXEL_GRID_WARNING|"""""""Ground"""" clasification not found"""|"""Clasificación """"Ground"""" no encontrada"""
+RECONSTRUCCION_MDT|Reconstrucción MDT|MDT Reconstruction
+REPORT_TITLE|Report error|Reportar error
+REPORT_TAB_SYSTEM|System|Sistema
+REPORT_CPU|CPU|CPU
+REPORT_OS|Operating System|Sistema Operativo
+REPORT_RAM|RAM|RAM
+REPORT_GPU|GPU|GPU
+REPORT_DRIVER|Driver ver.|Ver. driver
+REPORT_POINTCLOUD|Active point cloud|Nube de puntos en uso
+REPORT_MODULE|Active module|Módulo en uso
+REPORT_SENDLOG|Send log file?|¿Adjuntar fichero de registro?
+REPORT_SENDREPORT|Send report|Enviar reporte
+REPORT_SENDREPORT_DISABLED|Connection to NAS required|Se requiere conexión a NAS
+REPORT_NAME|Name or identifier|Nombre o identificador
+REPORT_NAME_HINT|Word or name to identify this report|Palabra o nombre identificativo del reporte
+REPORT_NAME_INVALID|Name or identifier can't contain whitespaces and only alphanumeric characters|El nombre o identificador no puede contener espacios y sólo caracteres alfanuméricos
+RESOURCES_DEFAULT_VALUE|File not selected|Fichero no seleccionado
+SCENEITEM_CAMERA|Camera|Cámara
+SCENEITEM_IMAGE|Image|Imagen
+SCENEITEM_LIGHT|Light|Luz
+SCENEITEM_MATERIAL|Material|Material
+SCENEITEM_MESH|Triangle mesh|Malla de triángulos
+SCENEITEM_PCLOUD|Point cloud|Nube de puntos
+SCENEITEM_RESOURCES|Resources|Recursos
+SCENEITEM_VALIDATION|Validation Method|Método de validación
+SEGMENTATION_TITLE|Segmentation|Segmentación
+SEGMENTATION_INPUT|Input|Entrada
+SEGMENTATION_INPUT_CHANNEL|Color channel|Canal de color
+SEGMENTATION_INPUT_PARAMETERS|Segmentation parameters|Parámetros de segmentación
+SEGMENTATION_INPUT_TOOLTIP|Select an image to segment individual trees. High contrast images yield better segmentation results.\n\nYou can use specific color channel as thresholding input.|Seleccione una imagen para segmentar árboles individuales. Imágenes de alto contraste permiten segmentaciones más precisas.\n\nPuede utilizar un canal de color concreto como imagen de entrada para la umbralización.
+SEGMENTATION_INPUT_THRESHOLD|Threshold|Umbral
+SEGMENTATION_INPUT_THRESHOLDING|Thresholding|Umbralización
+SEGMENTATION_INPUT_THRESHOLDED|Thresholded|Umbralizada
+SEGMENTATION_INPUT_THRESHOLD_TOOLTIP|Convert image to grayscale and filter out regions without interest.\n\nSet threshold value to assign binary thresholding. Set maximum value as assigned value to thresholded pixels.\nBoth values range from 0 to 255.\n\nSet inverse thresholding to apply inverted threshold method.|Convierte la imagen a escala de grises y filtra las regiones sin interés.\n\nAsgine el valor del umbral para clasificar la imagen.\nEstablezca el valor máximo como el valor asignado a los píxeles que superan el umbral.\nAmbos valores pueden variar entre 0 y 255.\n\nSeleccione umbralización invertida para aplicar el método de umbral invertido.
+SEGMENTATION_INPUT_THRESHOLD_INVERT|Invert thresholding|Umbralización invertida
+SEGMENTATION_INPUT_THRESHOLD_VALUE|Maximum value|Valor máximo
+SEGMENTATION_INPUT_CONTOURS|Contour finding|Búsqueda de contornos
+SEGMENTATION_INPUT_CONTOURS_DILATED|Dilated|Dilatada
+SEGMENTATION_INPUT_CONTOURS_KERNELDIM|Dilation kernel dimensions|Dimensiones del kernel de dilatación
+SEGMENTATION_INPUT_CONTOURS_KERNELITER|Dilation iterations|Iteraciones de dilatación
+SEGMENTATION_INPUT_CONTOURS_APPROXMODE|Contour approximation mode|Modo de aproximación de contornos
+SEGMENTATION_INPUT_CONTOURS_TOOLTIP|Dilate thresholded regions and approximates bounding rectangles.\n\nSet higher kernel dimensions and/or values for bigger and easier to detect regions, but at risk of merging regions.\n\nFor contour approximation modes, see OpenCV ContourApproximationModes|Dilata las regiones umbralizadas y aproxima los rectángulos envolventes.\n\nEstablezca un kernel de mayores dimensiones y/o valores para obtener regiones de mayor tamaño y fáciles de detectar, pero con el riesgo de mezcla entre regiones.\n\nPara más información de la aproximación de contornos, consultar OpenCV ContourApproximationModes
+SEGMENTATION_INPUT_VIEWIMAGE|View images|Ver imágenes
+SEGMENTATION_INPUT_VIEWIMAGE_TOOLTIP|View resulting images in detail.\n\nYou can only select available images after segmenting process.|Ver las imágenes resultantes en detalle.\n\nSolo pueden seleccionarse las imágenes disponibles tras el proceso de segmentado.
+SEGMENTATION_INPUT_SHAPEMASK|Shapefile mask|Máscara SHAPE
+SEGMENTATION_INPUT_FINDCONTOURS|Find contours|Buscar contornos
+SEGMENTATION_APROX_GEOCOORDS|Image center coordinates (UTM 30S):|Coordenadas del centro de la imagen (UTM 30S):
+SEGMENTATION_BUTTON_SEGMENT|Segment|Segmentar
+SEGMENTATION_BUTTON_EXPORT|Export segments|Exportar segmentos
+SEGMENTATION_CLEAR|Clear segmentation|Borrar segmentos
+SEGMENTATION_CLEAR_CONFIRM|Current segment data will be erased. Continue?|Los segmentos actuales serán eliminados. ¿Continuar?
+SEGMENTATION_GEOIN_FROM|From|Desde
+SEGMENTATION_GEOIN_TO|To|Hasta
+SEGMENTATION_GEOIN_BOX|Geographic rectangle coordinates|Coordenadas geográfica del rectángulo
+SEGMENTATION_GEOIN_SYSTEM|Coordinate system|Sistema de coordenadas
+SEGMENTATION_MANAGE_ACTION|Action|Acción
+SEGMENTATION_MANAGE_ADD|Add|Añadir
+SEGMENTATION_MANAGE_BRUSH|Brush|Brocha
+SEGMENTATION_MANAGE_BRUSH_SQUARE|Square|Cuadrada
+SEGMENTATION_MANAGE_BRUSH_CIRCLE|Circle|Circular
+SEGMENTATION_MANAGE_BRUSH_SIZE|Size (px)|Tamaño (px)
+SEGMENTATION_MANAGE_MOVE|Move|Mover
+SEGMENTATION_MANAGE_REMOVE|Remove|Eliminar
+SEGMENTATION_MANAGE_SEGMENT_RANGE|Segment size (%)|Tamaño de segmentos (%)
+SEGMENTATION_MANAGE_SEGMENT_RANGEINFO|Limits found regions by size, as a fraction of the image size:\nonly regions between set values will be saved while processing.\n\nUse Preview button to view the minimum and maximum regions allowed as a visual guide.|Limita las regiones encontradas según su tamaño como fración de las dimensiones de la imagen:\nsolo se guardarán las regiones cuyo tamaño quede dentro de rango establecido al procesar.\n\nUtilice el botón de Previsualizar para ver una guía visual de las regiones máxima y mínima permitidas.
+SEGMENTATION_MANAGE_GUIDE|Control guide|Guía de controles
+SEGMENTATION_MANAGE_GUIDE_ADD|· Click and hold left mouse button to start adding a region.\n· Drag while holding the button to set region rectangle.\n· Release the button to add the new region.|· Haga clic y mantenga el botón izquierdo del ratón para empezar a añadir una nueva región.\n· Arrastre el puntero mientras mantiene el botón para ajustar el rectángulo.\n· Suelte el botón para añadir la nueva región.
+SEGMENTATION_MANAGE_GUIDE_MOVE|· Click and hold left mouse button to select hovered region.\n· Drag while holding to move target region. Movement is restricted to image area.\n· Release the button to set the new region position|· Haga clic y mantenga el botón izquierdo del ratón para seleccionar la región sobre la que se encuentra el puntero.\n· Arratre el puntero mientras mantiene el botón para desplazar la región seleccionada. El movimiento está restringido al área de la imagen.\n· Suelte el botón para confirmar la nueva posición de la región.
+SEGMENTATION_MANAGE_GUIDE_REMOVE|· Use left mouse button to delete hovered region. You can also hold the button while dragging.|· Utilize el botón izquierdo del ratón para eliminar la región sobre la que se encuentra el puntero. También puede mantener el botón y arrastrar el puntero.
+SEGMENTATION_NOIMAGE|No input image loaded|No se ha cargado imagen de entrada
+SEGMENTATION_NORESULT|No regions of interest found|No se han encontrado regiones de interés
+SEGMENTATION_NOSHAPEFILE|No shapefile loaded|No se ha cargado fichero SHAPE
+SEGMENTATION_POPUP_UPLOAD|Confirm upload|Confirmar subida
+SEGMENTATION_POPUP_TEXT|This area already has data of same type.\nUpload anyway?|Esta zona contiene datos del mismo tipo.\n¿Continuar la subida?
+SEGMENTATION_RECT_COLOR|Rect marker color|Color de las marcas
+SEGMENTATION_REGIONCOUNT|Regions|Regiones
+SEGMENTATION_TAB_INPUT|Input|Entrada
+SEGMENTATION_TAB_MANAGE|Manage|Gestionar
+SEGMENTATION_TAB_SQLFILE|SQL File|Fichero SQL
+SEGMENTATION_BUTTON_DETECTGEO|Auto|Automático
+SEGMENTATION_BUTTON_GENERATESQL|Generate SQL|Generar SQL
+SEGMENTATION_BUTTON_LOADSHP|Load SHP|Abrir SHP
+SEGMENTATION_ZONA_UNKNOWN|Could not find nearest area from database.|No se pudo encontrar una zona cercana en la base de datos.
+SELECTION_NOCLOUD|No point cloud selected|No se ha seleccionado ninguna nube de puntos
+SELECTION_NOITEM|No element selected|No se ha seleccionado ningún elemento
+SELECTION_UNAVAIL_CLOUD|No point clouds avaiable|No hay nubes de puntos disponibles
+SELECTION_UNAVAIL_ITEM|No elements available|No hay elementos disponibles
+SETTINGS_DATABASE_IP|IP address|Dirección IP
+SETTINGS_DATABASE_WALLET|Oracle Wallet|Oracle Wallet
+SETTINGS_DATABASE_WALLET_PATH|Wallet directory|Directorio de Wallet
+SETTINGS_DATABASE_WALLET_SERVICE|Service|Servicio
+SETTINGS_DATABASE_WALLET_ERROR|No Wallet data found|No se han encontrado datos de Wallet
+SETTINGS_GENERAL|General|General
+SETTINGS_GENERAL_BGCOLOR|Background color|Color de fondo
+SETTINGS_GENERAL_GRIDCOLOR|Grid color|Color de rejilla
+SETTINGS_GENERAL_GRIDSHOW|Render grid|Visualizar rejilla
+SETTINGS_GENERAL_SHOWFPS|Show FPS in menu bar|Mostrar FPS en la barra de menú
+SETTINGS_GENERAL_SHOWMESHLETAABB|Show meshlets AABB|Mostrar AABB de meshlets
+SETTINGS_GENERAL_USECOMPUTESHADERS|Use compute shaders|Usar compute shaders
+SETTINGS_GENERAL_USEEDL|Use Eye-Dome Lighting|Usar Eye-Dome Lighting
+SETTINGS_COLOR_GRADIENT|Spectral data color gradient|Gradiente de color para datos espectrales
+SETTINGS_INPUT|Input|Entrada
+SETTINGS_INPUT_DCLICKSPEED|Double click speed (s)|Velocidad de doble click (s)
+SETTINGS_INPUT_DRAGTHRESH|Pointer drag threshold (px)|Umbral de arrastre del puntero (px)
+SETTINGS_LANGUAGE|Language|Idioma
+SPECTRALANALYSIS_PRELOAD_BUTTON|Preload data|Precargar datos
+SPECTRALANALYSIS_PRELOAD_STATEINFO|Preload status:|Estado de precarga:
+SPECTRALANALYSIS_PRELOAD_STATEON|Data in memory|Datos en memoria
+SPECTRALANALYSIS_PRELOAD_STATEOFF|Data not loaded|Datos no cargados
+SPECTRALANALYSIS_GENERATE_STATS|Compute statistics|Generar estadísticas
+SPECTRALANALYSIS_STATS_MEAN|Mean|Media
+SPECTRALANALYSIS_STATS_STDEV|Standard deviation|Desviación típica
+STATS_PLOT_FPS|FPS plot|Gráfica de FPS
+STATS_PLOT_FRAMETIME|Frametime plot|Gráfica de Frametime
+STRUCTURE_MASK|Structure mask|Máscara de estructuras
+TERRAIN_GENERATION_FROM_IMAGE_TABNAME|Terrain generation from orthophotos|Generación de terreno por ortofotos
+TERRAIN_GENERATION_FROM_IMAGE_BUTTON|Generate terrain|Generar terreno
+TEXT_DEFAULT_CLOUD_SELECTOR|Select a point cloud for validation|Selecciona una nube para la validación
+THERMAL_ADITIONAL|Aditional directories|Directorios adicionales
+THERMAL_ADITIONAL_CSV|CSV temperature|CSV temperatura
+THERMAL_CAMERA_ALIGN|Camera alignment|Alineación de cámara
+THERMAL_CAMERA_ALIGN_RGB|RGB|RGB
+THERMAL_CAMERA_ALIGN_THERMAL|Thermal|Térmica
+THERMAL_CLOUD_NONE|No point clouds available|No hay nubes de puntos disponibles
+THERMAL_IMAGES_REGISTER|Image register|Registro de imágenes
+THERMAL_IMAGES_RGB|RGB|RGB
+THERMAL_IMAGES_THERMAL|Thermal|Térmica
+THERMAL_PROJECTION|Project thermal data|Proyectar información térmica
+THERMAL_PROGRESS_METADATA|Reading image metadata...|Leyendo metadatos...
+THERMAL_PROGRESS_THERMAL_LOAD|Loading thermal images...|Cargando imágenes térmicas...
+THERMAL_PROGRESS_RGB_LOAD|Loading RGB images...|Cargando imágenes RGB...
+THERMAL_PROGRESS_IMAGE_REGISTER|Registering images...|Registrando imágenes...
+THERMAL_PROGRESS_READ_TEMPERATURE|Reading pixel temperatures...|Leyendo temperatura por píxel...
+THERMAL_PROGRESS_OCTREE|Building octree...|Construyendo octree...
+THERMAL_PROGRESS_AUGMENT|Augmenting point cloud...|Aumentando nube de puntos...
+THERMAL_PROGRESS_CLEANING|Cleaning...|Limpiando...
+VALIDATION_TABNAME|Validation|Validación
+VALIDATION_BY_MEAN|Colour mean validation method|Método de validación por media de color
+VALIDATION_BY_CLASS|Validation method by the largest class|Método de validación por la mayor clase
+VEGETATION_MASK|Vegetation mask|Máscara de vegetación
+VOXELGRID_SCENEITEM|Desired points per voxel|Puntos deseados por voxel
+VOXELGRID_SCENEITEM_GENERATE|Generate voxel grid|Generar malla de vóxeles
+WINDOW_CAMERAGIZMO|Camera orientation|Orientación de la cámara
+WINDOW_DETAILS|Details|Detalles
+WINDOW_INSPECTOR|Inspector|Inspector
+WINDOW_MATERIALS|Materials|Materiales
+WINDOW_SETTINGS|Settings|Ajustes
+WINDOW_STATS|Statistics|Estadísticas
+WINDOW_POINTPICKING|Point picking|Selección de puntos

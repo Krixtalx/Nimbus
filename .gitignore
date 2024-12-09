@@ -1,0 +1,85 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Visual Studio
+*.ipch
+.vs/*
+x64/*
+*/x64/*
+x86/*
+*/x86/*
+packages/*
+tools/*
+*.pdb
+*.tlog
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# VCPKG
+vcpkg_installed/*
+
+# Models
+*.bin
+*.mtl
+*.png
+*.jpeg
+*.jpg
+*.txt
+*.zip
+*.gltf
+*.md5anim
+*.md5mesh
+*.ply
+*.NimbusCloudRGB
+*.NimbusCloudPos
+*.NimbusCloud
+*.Nimbus
+*.bak
+*.TIF
+*.ini
+*.log
+
+#vcpkg Packages
+vcpkg_installed/*
+
+*.dat
+*.MP4
+
+App/Cache/*
+App/Assets/*
+!App/Assets/Shaders/
+!App/Assets/Fonts/
+!App/Assets/Lang/
+*.msi
+
+/Binaries
+*.sln

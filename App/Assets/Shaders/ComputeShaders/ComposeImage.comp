@@ -1,0 +1,69 @@
+#version 450
+#extension GL_NV_gpu_shader5 : enable
+#extension GL_NV_shader_atomic_int64: require
+#extension GL_ARB_compute_variable_group_size: enable
+
+layout(std430, binding = 0) restrict readonly buffer depthBuffer {
+    uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
+};
+
+uniform vec3 firstGradientPoint;
+uniform vec3 secondGradientPoint;
+uniform vec3 lastGradientPoint;
+
+subroutine vec3 GetColor(uint codedColor);
+subroutine uniform GetColor GetColorUniform;
+
+subroutine ( GetColor )
+vec3 getColorUnpackingUint(uint codedColor) {
+    return vec4(unpackUnorm4x8(codedColor)).xyz;
+}
+
+subroutine ( GetColor )
+vec3 getColorFromFloat(uint codedColor) {
+    float val = uintBitsToFloat(codedColor);
+    vec3 color;
+    if (val < 0.5f)
+        color = mix(firstGradientPoint, secondGradientPoint, val*2f);
+    else
+        color = mix(secondGradientPoint, lastGradientPoint, (val - 0.5f)*2f);
+    return color;
+}
+
+uniform layout(rgba8) writeonly image2D colorOutput;
+
+layout(local_size_variable) in;
+void main() {
+    const uint pixelIndex = gl_GlobalInvocationID.x;
+    const ivec2 imgSize = imageSize(colorOutput);
+    const uint totalPixels = imgSize.x * imgSize.y;
+    if (pixelIndex < totalPixels) {
+        uvec2 pixelCoords;
+        pixelCoords.y = uint(floor(pixelIndex / imgSize.x));
+        pixelCoords.x = pixelIndex % imgSize.x;
+        uint codedColor = uint(_depth[pixelIndex]);
+        if (codedColor != 0xFFFFFFFF) {
+            vec4 color = vec4(GetColorUniform(codedColor), 1);
+            imageStore(colorOutput, ivec2(pixelCoords), color);
+        } else {
+            vec4 finalColor = vec4(0, 0, 0, 0);
+            const uint neightbourSize = 3;
+            for (uint x = pixelCoords.x - neightbourSize; x <= pixelCoords.x + neightbourSize; x++) {
+                for (uint y = pixelCoords.y - neightbourSize; y <= pixelCoords.y + neightbourSize; y++) {
+                    uint pixelId = y * imgSize.x + x;
+                    codedColor = uint(_depth[pixelId]);
+                    if (codedColor != 0xFFFFFFFF) {
+                        finalColor.xyz += GetColorUniform(codedColor);
+                        finalColor.a += 1;
+                    }
+                }
+            }
+            if (finalColor.a > 0) {
+                finalColor.xyz /= finalColor.a;
+                //finalColor.xyz = vec3(1,0,0);
+                finalColor.a = 1;
+                imageStore(colorOutput, ivec2(pixelCoords), finalColor);
+            }
+        }
+    }
+}

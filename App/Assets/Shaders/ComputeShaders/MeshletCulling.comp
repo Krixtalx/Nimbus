@@ -1,0 +1,82 @@
+#version 460
+
+#extension GL_ARB_compute_variable_group_size: enable
+#extension GL_NV_gpu_shader5 : enable
+
+struct AABB {
+    double aabbPoints[6];
+};
+
+uniform uint meshletSize;
+uniform uint numMeshlets;
+uniform uvec2 windowSize;
+uniform mat4 modelMatrix;
+uniform mat4 mModelViewProj;
+uniform dvec4 frustumPlane[6];
+uniform float meanMeshletExtent;
+
+layout(std430, binding = 1) restrict writeonly buffer culling {
+    uint16_t pointsToRender[];
+};
+
+layout(std430, binding = 4) restrict readonly buffer _meshletsAABBs {
+    AABB _aabbs[];
+};
+
+layout(std430, binding = 5) restrict buffer _readbackBuffer {
+    uint _renderedPoints;
+};
+
+uint16_t computePointsToRender(AABB box) {
+    vec4 vmin = modelMatrix * vec4(box.aabbPoints[0], box.aabbPoints[1], box.aabbPoints[2], 1);
+    vec4 vmax = modelMatrix * vec4(box.aabbPoints[3], box.aabbPoints[4], box.aabbPoints[5], 1);
+    for (int i = 0; i < 6; i++) {
+        const dvec4 g = frustumPlane[i];
+        if ((dot(g, dvec4(vmin.x, vmin.y, vmin.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmax.x, vmin.y, vmin.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmin.x, vmax.y, vmin.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmax.x, vmax.y, vmin.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmin.x, vmin.y, vmax.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmax.x, vmin.y, vmax.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmin.x, vmax.y, vmax.z, 1.0f)) < 0.0) &&
+                (dot(g, dvec4(vmax.x, vmax.y, vmax.z, 1.0f)) < 0.0))
+        {
+            return (uint16_t) 0;
+        }
+    }
+    vmin = vec4(box.aabbPoints[0], box.aabbPoints[1], box.aabbPoints[2], 1);
+    vmax = vec4(box.aabbPoints[3], box.aabbPoints[4], box.aabbPoints[5], 1);
+    vec3 center = (vmax.xyz + vmin.xyz)/2.0;
+    float extent = distance(center, vec3(vmax));
+
+    vec4 projectedCenter = mModelViewProj * vec4(center, 1.0);
+    projectedCenter.xy /= projectedCenter.w;
+    vec4 projectedEdge = mModelViewProj * vec4(center + vec3(extent, 0.0, 0.0), 1.0);
+    projectedEdge.xy /= projectedEdge.w;
+
+    vec2 screenCenter = windowSize * (projectedCenter.xy + 1) / 2;
+    vec2 screenEdge = windowSize * (projectedEdge.xy + 1) / 2;
+    float numPixels = distance(screenEdge, screenCenter);
+    extent *= 2;
+    float mult = (meanMeshletExtent*meanMeshletExtent) / (extent*extent);
+    mult = clamp(mult, 0, 1);
+//    if(numPixels > 0)
+//        numPixels = max(1, numPixels);
+    uint16_t numPoints = (uint16_t)(numPixels * 60 * mult);
+    numPoints = clamp(numPoints, (uint16_t)0, (uint16_t) meshletSize);
+//    if(extent < meanMeshletExtent*5)
+//        numPoints = clamp(numPoints, (uint16_t)0, (uint16_t) meshletSize);
+//    if(extent > 100)
+//        numPoints = max((uint16_t)meshletSize, numPoints);
+//    else
+//        numPoints = (uint16_t)0;
+    atomicAdd(_renderedPoints, numPoints);
+    return numPoints;
+}
+layout(local_size_variable) in;
+
+void main() {
+    const uint index = gl_GlobalInvocationID.x;
+    if (index < numMeshlets)
+        pointsToRender[index] = computePointsToRender(_aabbs[index]);
+}

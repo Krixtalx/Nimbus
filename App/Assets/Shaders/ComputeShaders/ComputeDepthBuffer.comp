@@ -1,0 +1,55 @@
+#version 450
+#extension GL_NV_gpu_shader5 : enable
+#extension GL_NV_shader_atomic_int64: require
+#extension GL_ARB_compute_variable_group_size: enable
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_vote : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+
+layout(std430, binding = 0) restrict buffer depthBuffer {
+    uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
+};
+
+layout(std430, binding = 7) restrict readonly buffer vPosition {
+    float points[];
+};
+
+layout(std430, binding = 9) restrict readonly buffer vAttributes {
+    uint att[];
+};
+
+uniform uint pointsOffset;
+uniform uint numPoints;
+uniform mat4 mModelViewProj;
+uniform uvec2 windowSize;
+
+layout(local_size_variable) in;
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    if (index < numPoints) {
+        index += pointsOffset;
+        uint baseIndex = index * 3;
+        vec4 projectedPosition = mModelViewProj * vec4(points[baseIndex], points[baseIndex + 1], points[baseIndex + 2], 1);
+        projectedPosition.xyz /= projectedPosition.w;
+        if (projectedPosition.w > 0.0 && projectedPosition.x > -1.0 && projectedPosition.x < 1.0 && projectedPosition.y > -1.0 && projectedPosition.y < 1.0) {
+            ivec2 windowPosition = ivec2((projectedPosition.xy * 0.5f + 0.5f) * windowSize);
+            uint depthBufferIndex = windowPosition.y * windowSize.x + windowPosition.x;
+            const uint64_t currentDepth = _depth[depthBufferIndex];
+            const uint uintDepth = floatBitsToUint(projectedPosition.w);
+
+            //Comprobamos si todos los hilos del subgrupo recaen sobre el mismo pixel
+            bool canReduce = subgroupAllEqual(depthBufferIndex);
+            uint minDepth = uintDepth;
+            if (canReduce) {
+                //Si todos los hilos recaen sobre el mismo pixel, hacemos una reducci�n temprana.
+                minDepth = subgroupMin(minDepth);
+            }
+
+            //Asignamos la profundidad minima al depthBuffer. Esto se ejecutara una sola vez en el caso de haber podido reducir.
+            if (minDepth < currentDepth && minDepth == uintDepth) {
+                const uint64_t depthAndPointId = att[index] | (uint64_t(minDepth) << 32);
+                atomicMin(_depth[depthBufferIndex], depthAndPointId);
+            }
+        }
+    }
+}

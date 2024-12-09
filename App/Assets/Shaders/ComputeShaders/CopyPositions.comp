@@ -1,0 +1,35 @@
+#version 450
+#extension GL_NV_gpu_shader5 : enable
+#extension GL_ARB_compute_variable_group_size: enable
+
+struct PointWithOffset {
+    float position[3];
+    uint offset;
+    uint att;
+};
+
+layout(std430, binding = 3) restrict readonly buffer vPointsWithOffset {
+    PointWithOffset newPoints[];
+};
+
+layout(std430, binding = 7) restrict writeonly buffer vPosition {
+    float point[];
+};
+
+layout(std430, binding = 9) restrict writeonly buffer vAttributes {
+    uint att[];
+};
+
+uniform uint numPointsWithOffset;
+
+layout(local_size_variable) in;
+void main() {
+    if (gl_GlobalInvocationID.x < numPointsWithOffset) {
+        PointWithOffset newPoint = newPoints[gl_GlobalInvocationID.x];
+        uint pointIndex = newPoint.offset * 3;
+        point[pointIndex] = newPoint.position[0];
+        point[pointIndex+1] = newPoint.position[1];
+        point[pointIndex+2] = newPoint.position[2];
+        att[newPoint.offset] = newPoint.att;
+    }
+}

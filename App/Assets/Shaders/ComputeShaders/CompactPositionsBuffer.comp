@@ -1,0 +1,53 @@
+#version 450
+#extension GL_NV_gpu_shader5 : enable
+#extension GL_ARB_compute_variable_group_size: enable
+
+struct CompactInfo {
+    uint32_t prevIndex;
+    uint32_t newIndex;
+    uint16_t meshletLength;
+};
+
+layout(std430, binding = 2) restrict readonly buffer vCompactionInfo {
+    CompactInfo compactInfo[];
+};
+
+layout(std430, binding = 7) restrict writeonly buffer vPosition {
+    float point[];
+};
+
+layout(std430, binding = 8) restrict readonly buffer vPositionLastFrame {
+    float pointsLastFrame[];
+};
+
+layout(std430, binding = 9) restrict writeonly buffer vAttributes {
+    uint att[];
+};
+
+layout(std430, binding = 10) restrict readonly buffer vAttributesLastFrame {
+    uint attLastFrame[];
+};
+
+
+//uniform uint numMeshlets;
+uniform uint maxPointsToMove;
+uniform uint numCompactInfo;
+
+layout(local_size_variable) in;
+void main() {
+    uint index = gl_GlobalInvocationID.x / maxPointsToMove;
+    if (index < numCompactInfo) {
+        uint insideMeshletIndex = gl_GlobalInvocationID.x - index * maxPointsToMove;
+        CompactInfo currentCompactInfo = compactInfo[index];        
+        if (insideMeshletIndex < currentCompactInfo.meshletLength ) {
+            uint currentFrameIndex = (currentCompactInfo.newIndex + insideMeshletIndex);
+            uint lastFrameIndex = (currentCompactInfo.prevIndex + insideMeshletIndex);
+            att[currentFrameIndex] = attLastFrame[lastFrameIndex];
+            currentFrameIndex *= 3;
+            lastFrameIndex *= 3;
+            point[currentFrameIndex] = pointsLastFrame[lastFrameIndex];
+            point[currentFrameIndex + 1] = pointsLastFrame[lastFrameIndex + 1];
+            point[currentFrameIndex + 2] = pointsLastFrame[lastFrameIndex + 2];
+        }
+    }
+}

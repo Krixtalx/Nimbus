@@ -1,0 +1,35 @@
+{
+  "builtin-baseline": "6ebf8c123bc8077dc9216db6438eeabaa154c473",
+  "dependencies": [
+    "concurrentqueue",
+    "efsw",
+    "glfw3",
+    "glm",
+    "implot",
+    "laszip",
+    "lodepng",
+    "nanoflann",
+    "spdlog",
+    {
+      "name": "glad",
+      "features": [
+        "gl-api-46",
+        "extensions"
+      ]
+    },
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "10.2.1"
+    }
+  ]
+}
