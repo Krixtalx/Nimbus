@@ -521,8 +521,8 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 	std::string rootPath;
 	std::string name;
 
-	for (u16 i = 0; i < numFiles; ++i) {
-		const std::filesystem::path path = filepaths[i];
+	for (u16 currentFile = 0; currentFile < numFiles; ++currentFile) {
+		const std::filesystem::path path = filepaths[currentFile];
 		rootPath = path.parent_path().string();
 		name = path.stem().string();
 
@@ -562,7 +562,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 					//El color en LAS/LAZ viene codificado en uint16. Para pasarlo a float lo dividimos entre 2^16
 					uint32_t codedColor = VAO::Point::getFloatRGBColor({ (float)pointR->rgb[0] / 65536, (float)pointR->rgb[1] / 65536, (float)pointR->rgb[2] / 65536 });
 					colors.push_back(codedColor);
-					_loadProgress = (pointsReaded++ / (float)pointsNumber);
+					_loadProgress = (float)currentFile/numFiles + (pointsReaded++ / (float)pointsNumber)/numFiles;
 				}
 
 				cloud->setPosition({ offset.x, offset.y, offset.z });
