@@ -243,7 +243,7 @@ void Nimbus::InputManager::init(GLFWwindow* window) {
 	//	WINhWnd, DWMWINDOWATTRIBUTE::DWMWA_USE_IMMERSIVE_DARK_MODE,
 	//	&USE_DARK_MODE, sizeof(USE_DARK_MODE)));
 	//disableTitlebar(_window);
-	
+
 
 	// - Registramos los callbacks que responder�n a los eventos principales
 	glfwSetWindowRefreshCallback(window, windowRefreshCallback);
@@ -384,10 +384,15 @@ void Nimbus::InputManager::dropCallback(GLFWwindow* window, const int count, con
 	for (int i = 0; i < count; ++i) {
 		stringPaths.emplace_back(paths[i]);
 	}
-	std::thread t([=]() {
-		for (int i = 0; i < count; ++i) {
-			FileManager::loadPointCloud(stringPaths[i]);
-		}
-	});
-	t.detach();
+	if (count == 1) {
+		std::thread t([=]() {
+			FileManager::loadPointCloud(stringPaths[0]);
+		});
+		t.detach();
+	} else {
+		std::thread t([=]() {
+			FileManager::loadMergePointClouds(stringPaths);
+		});
+		t.detach();
+	}
 }
