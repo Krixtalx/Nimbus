@@ -61,7 +61,7 @@ void Nimbus::Application::init(const std::string& title, int width, int height) 
 	// - Hace que el contexto OpenGL asociado a la ventana que acabamos de crear pase a
 	// ser el contexto actual de OpenGL para las siguientes llamadas a la biblioteca
 	glfwMakeContextCurrent(_window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	// - Ahora inicializamos GLEW.
 	// IMPORTANTE: GLAD debe inicializarse siempre DESPU�S de que se haya
