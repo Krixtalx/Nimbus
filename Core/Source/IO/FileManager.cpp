@@ -389,13 +389,8 @@ bool Nimbus::FileManager::loadLas(const std::string& filePath, bool useClassific
 		laszip_get_point_pointer(laszip_reader, &pointR);
 
 		auto minor = header->version_minor;
-		u64 pointsNumber;
-
-		if (minor < 4)
-			pointsNumber = header->number_of_point_records;
-		else
-			pointsNumber = header->extended_number_of_point_records;
-		
+		u64 pointsNumber = (header->number_of_point_records ? header->number_of_point_records : header->extended_number_of_point_records);
+				
 		auto scaleFactor = vec3(header->x_scale_factor, header->y_scale_factor, header->z_scale_factor);
 		auto offset = vec3(header->x_offset, header->y_offset, header->z_offset);
 
