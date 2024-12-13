@@ -357,153 +357,10 @@ bool Nimbus::FileManager::loadPly(const std::string& filePath, bool useClassific
 
 /**
  * \brief Carga un fichero LAS/LAZ
- * \param filePath ruta del fichero
+ * \param filePaths rutas del fichero/s
  * \param useClassification si es true y el LAS tiene datos de clasificacion, se cargaran. En caso de ser false, no se cargaran.
  * \return bool dependiendo de si se ha cargado correctamente o no.
  */
-bool Nimbus::FileManager::loadLas(const std::string& filePath, bool useClassification) {
-	_loadProgress = 0.f;
-
-	ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, _loadProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_OPENINGCLOUD).c_str() });
-
-	if (useClassification)
-		spdlog::warn("LAS/LAZ load doesn't support classification right now");
-
-	const auto start = std::chrono::high_resolution_clock::now();
-
-	const std::filesystem::path path = filePath;
-	std::string rootPath = path.parent_path().string();
-	std::string name = path.stem().string();
-
-	// Método de apertura de nubes de puntos con la libreria laszip
-	laszip_POINTER laszip_reader;
-	laszip_create(&laszip_reader);
-	laszip_BOOL* isCompressed = new laszip_BOOL(1);
-	if (!laszip_open_reader(laszip_reader, path.string().c_str(), isCompressed)) {
-		laszip_header* header;
-		laszip_get_header_pointer(laszip_reader, &header);
-
-		laszip_point* pointR;
-		laszip_get_point_pointer(laszip_reader, &pointR);
-
-		auto minor = header->version_minor;
-		u64 pointsNumber = (header->number_of_point_records ? header->number_of_point_records : header->extended_number_of_point_records);
-
-		auto scaleFactor = vec3(header->x_scale_factor, header->y_scale_factor, header->z_scale_factor);
-		auto offset = vec3(header->x_offset, header->y_offset, header->z_offset);
-
-		u64 remainingPoints = pointsNumber;
-		f64 pointsReaded = 0;
-		u16 pointId = 0;
-		std::queue<std::string> cloudNames;
-		AABB fullCloudAABB;
-		while (remainingPoints > 0) {
-			std::string chunkName = name + "_" + std::to_string(pointId++);
-			cloudNames.push(chunkName);
-			const auto cloud = new PointCloud(chunkName);
-			std::vector<vec3>& points = cloud->_position;
-			std::vector<u32>& colors = cloud->_rgbColor;
-			u64 pointsToRead = std::min(pointsPerBatch, remainingPoints);
-			remainingPoints -= pointsToRead;
-			for (u64 i = 0; i < pointsToRead; ++i) {
-				laszip_read_point(laszip_reader);
-				auto point = vec3(
-					pointR->X * scaleFactor.x,
-					pointR->Y * scaleFactor.y,
-					pointR->Z * scaleFactor.z);
-				fullCloudAABB.update(point);
-				points.push_back(point);
-				//El color en LAS/LAZ viene codificado en uint16. Para pasarlo a float lo dividimos entre 2^16
-				uint32_t codedColor = VAO::Point::getFloatRGBColor({ (float)pointR->rgb[0] / 65536, (float)pointR->rgb[1] / 65536, (float)pointR->rgb[2] / 65536 });
-				colors.push_back(codedColor);
-				_loadProgress = (pointsReaded++ / (float)pointsNumber);
-			}
-
-			cloud->setPosition({ offset.x, offset.y, offset.z });
-			cloud->_name = chunkName;
-			cloud->_savePath = rootPath;
-			cloud->_savePath += "\\" + chunkName;
-			cloud->saveBinaryFile(cloud->_savePath);
-			delete cloud;
-		}
-		_loadProgress = 1.0f;
-
-		static float sortingProgress = 0;
-		ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, sortingProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_SORTINGCLOUD).c_str() });
-
-		u32 numCloudNames = cloudNames.size();
-		for (u32 i = 0; i < numCloudNames; ++i) {
-			std::string cloudName = cloudNames.front();
-			cloudNames.pop();
-			cloudNames.push(cloudName);
-			auto cloud = new PointCloud(cloudName);
-			cloud->_aabb.update(fullCloudAABB);
-			cloud->_savePath = rootPath + "\\" + cloudName;
-			cloud->loadPositionsFromBinaryFile(cloud->_savePath);
-			cloud->loadRGBFromBinaryFile(cloud->_savePath);
-			cloud->spatialOrdering(PointCloud::SortingMethod::Hilbert, true, numCloudNames == 1);
-			delete cloud;
-			sortingProgress += 1.0f / cloudNames.size();
-		}
-		sortingProgress = 1.0f;
-
-		static float mergingProgress = 0;
-		ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, mergingProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_MERGINGCLOUD).c_str() });
-
-		std::vector<std::future<std::string>> asyncCalls;
-		u32 mergeId = 0;
-		u32 totalMerges = cloudNames.size() - 1;
-		u32 mergesCompleted = 0;
-		do {
-			for (auto& future : asyncCalls) {
-				auto result = future.get();
-				if (!result.empty()) {
-					cloudNames.push(result);
-					mergesCompleted++;
-					mergingProgress = (float)mergesCompleted / totalMerges;
-				}
-			}
-			asyncCalls.clear();
-			while (cloudNames.size() > 1) {
-				auto cloudName1 = cloudNames.front();
-				cloudNames.pop();
-				auto cloudName2 = cloudNames.front();
-				cloudNames.pop();
-				std::string mergeName = "Merge_" + std::to_string(mergeId++);
-				asyncCalls.push_back(std::async(std::launch::async,
-												[=]() {
-					if (mergeNimbusClouds(cloudName1, cloudName2, mergeName, rootPath, mergeId == totalMerges))
-						return mergeName;
-					return std::string();
-				}));
-			}
-		} while (!asyncCalls.empty());
-		mergingProgress = 1.0f;
-
-		auto cloudName = cloudNames.front();
-		auto cloud = new PointCloud(cloudName);
-		std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloud", rootPath + "\\" + name + ".NimbusCloud");
-		std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloudPos", rootPath + "\\" + name + ".NimbusCloudPos");
-		std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloudRGB", rootPath + "\\" + name + ".NimbusCloudRGB");
-		cloud->loadBinaryFile(rootPath + "\\" + name);
-		//TODO: prompt to apply offset or keep at origin
-		cloud->setOffset({ offset.x, offset.y, offset.z });
-		cloud->_name = name;
-		cloud->_savePath = rootPath + "\\" + name;
-		//cloud->computeMetrics("Hilbert");
-		cloud->saveMetadata(rootPath + "\\" + name);
-		cloud->needUpdate();
-		Renderer::getInstance()->addModel(cloud);
-		const auto end = std::chrono::high_resolution_clock::now();
-
-		const auto int_s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		spdlog::info("{}: File loaded in {} ms", __FUNCTION__, int_s.count());
-		return true;
-	}
-
-	return false;
-}
-
 bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths, const bool useClassification) {
 	_loadProgress = 0.f;
 
@@ -520,6 +377,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 	AABB fullCloudAABB;
 	std::string rootPath;
 	std::string name;
+	u64 totalNumPoints = 0;
 
 	for (u16 currentFile = 0; currentFile < numFiles; ++currentFile) {
 		const std::filesystem::path path = filepaths[currentFile];
@@ -536,6 +394,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 			laszip_get_point_pointer(reader, &pointR);
 
 			u64 pointsNumber = (header->number_of_point_records ? header->number_of_point_records : header->extended_number_of_point_records);
+			totalNumPoints += pointsNumber;
 
 			auto scaleFactor = vec3(header->x_scale_factor, header->y_scale_factor, header->z_scale_factor);
 			auto offset = vec3(header->x_offset, header->y_offset, header->z_offset);
@@ -562,7 +421,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 					//El color en LAS/LAZ viene codificado en uint16. Para pasarlo a float lo dividimos entre 2^16
 					uint32_t codedColor = VAO::Point::getFloatRGBColor({ (float)pointR->rgb[0] / 65536, (float)pointR->rgb[1] / 65536, (float)pointR->rgb[2] / 65536 });
 					colors.push_back(codedColor);
-					_loadProgress = (float)currentFile/numFiles + (pointsReaded++ / (float)pointsNumber)/numFiles;
+					_loadProgress = (float)currentFile / numFiles + (pointsReaded++ / (float)pointsNumber) / numFiles;
 				}
 
 				cloud->setPosition({ offset.x, offset.y, offset.z });
@@ -778,7 +637,9 @@ bool Nimbus::FileManager::loadPointCloud(const std::string& filepath, const bool
 				return loadPly(filePath.string(), useClassification);
 			}
 			if (extension == ".las" || extension == ".laz") { //El metodo LAS comprueba si está comprimido o no, por eso se usa el mismo.
-				return loadLas(filePath.string(), useClassification);
+				std::vector<string> t;
+				t.push_back(filepath);
+				return loadMergeLas(t, useClassification);
 			}if (extension == ".NimbusCloud")
 				return loadNativeCloud(filePath.string());
 		} catch (std::exception& e) {

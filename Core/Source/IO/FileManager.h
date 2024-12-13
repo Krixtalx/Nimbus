@@ -7,7 +7,6 @@ namespace Nimbus {
 		static constexpr u64 pointsPerBatch = 200000000;
 
 		static bool loadPly(const std::string& filePath, bool useClassification = true);
-		static bool loadLas(const std::string& filePath, bool useClassification = true);
 		static bool loadMergeLas(const std::vector<std::string>& filepaths, const bool useClassification = true);
 		static bool loadNativeCloud(const std::string& filePath);
 		static bool mergeNimbusClouds(const std::string& cloudName1, const std::string& cloudName2, const std::string& mergeName, const std::string& rootPath, const
