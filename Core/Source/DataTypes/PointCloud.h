@@ -169,7 +169,7 @@ namespace Nimbus {
 		const std::vector<Meshlet>& getMeshlets();
 		u32 getMeshletSize() const;
 		size_t getMeshletNumber() const;
-		u32 getNumberOfPoints() const;
+		u64 getNumberOfPoints() const;
 		std::string getCloudSummary() const;
 		bool isEnabled() const;
 		bool isControlledByRenderer() const;

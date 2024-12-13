@@ -664,7 +664,7 @@ size_t Nimbus::PointCloud::getMeshletNumber() const {
 	return _meshlets.size();
 }
 
-u32 Nimbus::PointCloud::getNumberOfPoints() const {
+u64 Nimbus::PointCloud::getNumberOfPoints() const {
 	if (_position.empty())
 		return _numPoints;
 	return _position.size();
