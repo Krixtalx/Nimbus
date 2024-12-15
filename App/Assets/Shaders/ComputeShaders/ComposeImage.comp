@@ -7,6 +7,8 @@ layout(std430, binding = 0) restrict readonly buffer depthBuffer {
     uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
 };
 
+#define NULL_BACKGROUND 0xFFFFFFFF
+
 uniform vec3 firstGradientPoint;
 uniform vec3 secondGradientPoint;
 uniform vec3 lastGradientPoint;
@@ -30,6 +32,35 @@ vec3 getColorFromFloat(uint codedColor) {
     return color;
 }
 
+uint getPixelId(ivec2 pixelCoords, ivec2 imgSize) {
+	return pixelCoords.y * imgSize.x + pixelCoords.x;
+}
+
+bool fillBackground(ivec2 pixelCoords, ivec2 imgSize) {
+	ivec2 minCoords = max(pixelCoords - ivec2(1), ivec2(0)), maxCoords = min(pixelCoords + ivec2(1), imgSize - ivec2(1));
+	uint8_t 
+		lt = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		lm = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, pixelCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		lb = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		mt = uint8_t(uint(_depth[getPixelId(ivec2(pixelCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		mb = uint8_t(uint(_depth[getPixelId(ivec2(pixelCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		rt = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		rm = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, pixelCoords.y), imgSize)]) != NULL_BACKGROUND), 
+		rb = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND);
+	
+	uint8_t sum = lt + lm + lb + mt + mb + rt + rm + rb;
+	uint8_t m0 = mt + rt + rm + rb + mb;
+	uint8_t m1 = lt + mt + rt + lm + rm;
+	uint8_t m2 = lt + mt + lm + lb + mb;
+	uint8_t m3 = lm + rm + lb + mb + rb;
+	uint8_t m4 = lt + mt + rt + rm + rb;
+	uint8_t m5 = lt + mt + rt + lm + lb;
+	uint8_t m6 = lt + lm + lb + mb + rb;
+	uint8_t m7 = rt + rm + rb + mb + lb;
+	
+	return sum == uint8_t(8) || (m0 * m1 * m2 * m3 * m4 * m5 * m6 * m7) != uint8_t(0);
+}
+
 uniform layout(rgba8) writeonly image2D colorOutput;
 
 layout(local_size_variable) in;
@@ -38,21 +69,21 @@ void main() {
     const ivec2 imgSize = imageSize(colorOutput);
     const uint totalPixels = imgSize.x * imgSize.y;
     if (pixelIndex < totalPixels) {
-        uvec2 pixelCoords;
-        pixelCoords.y = uint(floor(pixelIndex / imgSize.x));
-        pixelCoords.x = pixelIndex % imgSize.x;
+        ivec2 pixelCoords;
+        pixelCoords.y = int(floor(pixelIndex / imgSize.x));
+        pixelCoords.x = int(pixelIndex % imgSize.x);
         uint codedColor = uint(_depth[pixelIndex]);
-        if (codedColor != 0xFFFFFFFF) {
+        if (codedColor != NULL_BACKGROUND) {
             vec4 color = vec4(GetColorUniform(codedColor), 1);
-            imageStore(colorOutput, ivec2(pixelCoords), color);
+            imageStore(colorOutput, pixelCoords, color);
         } else {
             vec4 finalColor = vec4(0, 0, 0, 0);
-            const uint neightbourSize = 3;
-            for (uint x = pixelCoords.x - neightbourSize; x <= pixelCoords.x + neightbourSize; x++) {
-                for (uint y = pixelCoords.y - neightbourSize; y <= pixelCoords.y + neightbourSize; y++) {
+            const int neightbourSize = 0;
+            for (int x = max(pixelCoords.x - neightbourSize, 0); x <= min(pixelCoords.x + neightbourSize, imgSize.x - 1); x++) {
+                for (int y = max(pixelCoords.y - neightbourSize, 0); y <= min(pixelCoords.y + neightbourSize, imgSize.y - 1); y++) {
                     uint pixelId = y * imgSize.x + x;
                     codedColor = uint(_depth[pixelId]);
-                    if (codedColor != 0xFFFFFFFF) {
+                    if (codedColor != NULL_BACKGROUND) {
                         finalColor.xyz += GetColorUniform(codedColor);
                         finalColor.a += 1;
                     }
@@ -62,7 +93,7 @@ void main() {
                 finalColor.xyz /= finalColor.a;
                 //finalColor.xyz = vec3(1,0,0);
                 finalColor.a = 1;
-                imageStore(colorOutput, ivec2(pixelCoords), finalColor);
+                imageStore(colorOutput, pixelCoords, finalColor);
             }
         }
     }
