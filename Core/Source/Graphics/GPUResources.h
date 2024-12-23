@@ -133,7 +133,6 @@ namespace Nimbus {
 			PositionLastFrame,
 			Attribute,
 			AttributeLastFrame,
-			//ND_VegetationIndex, R_VegetationIndex, GR_VegetationIndex, NDRE_VegetationIndex,
 			Total
 		};
 		enum class SSBOSlots : uint8_t {
@@ -144,9 +143,10 @@ namespace Nimbus {
 			Meshlets,
 			ReadBackData,
 			PickedPoint,
-			Position,
-			Attribute,
-			//ND_VegetationIndex, R_VegetationIndex, GR_VegetationIndex, NDRE_VegetationIndex,
+			PositionFrame1,
+		    PositionFrame2,
+			AttributeFrame1,
+			AttributeFrame2,
 			Total
 		};
 

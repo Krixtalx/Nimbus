@@ -192,15 +192,17 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &GPUResources::maxMemoryPerSSBO);
 	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &alignment);
 	_newPointsBufferSize = 3000000;
-	_pointsPerSubBuffer = 80000000;
+	_pointsPerSubBuffer = GPUResources::maxMemoryPerSSBO / sizeof(glm::vec3);
 	_pointDataToSend.resize(_newPointsBufferSize);
 	_numBuffers = 2;
 	_prevBufferId = 0;
 	_currentBufferId = 1;
 	_GPUResources.reserveGPUMemory<uint64_t>(GPUResources::SSBOSlots::DepthBuffer, static_cast<size_t>(_appState->_viewportSize.x) * _appState->_viewportSize.y, 0);
 	_GPUResources.reserveGPUMappedMemory<u32>(GPUResources::SSBOSlots::ReadBackData, 1, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
-	_GPUResources.reserveGPUMemory<vec3>(GPUResources::SSBOSlots::Position, _pointsPerSubBuffer * _numBuffers, 0);
-	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::Attribute, _pointsPerSubBuffer * _numBuffers, 0);
+	_GPUResources.reserveGPUMemory<vec3>(GPUResources::SSBOSlots::PositionFrame1, _pointsPerSubBuffer, 0);
+	_GPUResources.reserveGPUMemory<vec3>(GPUResources::SSBOSlots::PositionFrame2, _pointsPerSubBuffer, 0);
+	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame1, _pointsPerSubBuffer, 0);
+	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame2, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMappedMemory<PointWithOffset>(GPUResources::SSBOSlots::UploadBuffer, _newPointsBufferSize * _numBuffers, GL_MAP_WRITE_BIT);
 }
 
@@ -441,10 +443,12 @@ void Nimbus::Renderer::render() {
 				const i32 xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, sentPoints[_currentBufferId]);
 
 				_copyPositionsShader->setUniform("numPointsWithOffset", sentPoints[_currentBufferId]);
-				_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Position, GPUResources::GPUBinding::Position,
-											  _pointsPerSubBuffer * _currentBufferId * sizeof(vec3), _pointsPerSubBuffer * sizeof(vec3));
-				_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Attribute, GPUResources::GPUBinding::Attribute,
-											  _pointsPerSubBuffer * _currentBufferId * sizeof(u32), _pointsPerSubBuffer * sizeof(u32));
+				_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::PositionFrame1 : GPUResources::SSBOSlots::PositionFrame2,
+				                              GPUResources::GPUBinding::Position,
+											  0, _pointsPerSubBuffer * sizeof(vec3));
+				_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::AttributeFrame1 : GPUResources::SSBOSlots::AttributeFrame2, 
+				                              GPUResources::GPUBinding::Attribute,
+											  0, _pointsPerSubBuffer * sizeof(u32));
 				_GPUResources.bindBufferRange(GPUResources::SSBOSlots::UploadBuffer, GPUResources::GPUBinding::UploadBuffer, _newPointsBufferSize * _currentBufferId * sizeof(PointWithOffset), _newPointsBufferSize * sizeof(PointWithOffset));
 				glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, 12, "CopyNewData");
 				_copyPositionsShader->execute(xNumGroups, xNumWorkGroups);
@@ -454,14 +458,18 @@ void Nimbus::Renderer::render() {
 			for (const auto& cloud : _scenes[_activeScene]->_pointClouds | std::views::values) {
 				const auto numMeshlets = cloud->getMeshletNumber();
 				if (numMeshlets > 0 && cloud->_enabled && cloud->isControlledByRenderer()) {
-					_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Position, GPUResources::GPUBinding::Position,
-												  _pointsPerSubBuffer * _currentBufferId * sizeof(vec3), _pointsPerSubBuffer * sizeof(vec3));
-					_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Position, GPUResources::GPUBinding::PositionLastFrame,
-												  _pointsPerSubBuffer * _prevBufferId * sizeof(vec3), _pointsPerSubBuffer * sizeof(vec3));
-					_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Attribute, GPUResources::GPUBinding::Attribute,
-												  _pointsPerSubBuffer * _currentBufferId * sizeof(u32), _pointsPerSubBuffer * sizeof(u32));
-					_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Attribute, GPUResources::GPUBinding::AttributeLastFrame,
-												  _pointsPerSubBuffer * _prevBufferId * sizeof(u32), _pointsPerSubBuffer * sizeof(u32));
+					_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::PositionFrame1 : GPUResources::SSBOSlots::PositionFrame2,
+					                              GPUResources::GPUBinding::Position,
+												  0, _pointsPerSubBuffer * sizeof(vec3));
+					_GPUResources.bindBufferRange(_prevBufferId == 0 ? GPUResources::SSBOSlots::PositionFrame1 : GPUResources::SSBOSlots::PositionFrame2,
+					                              GPUResources::GPUBinding::PositionLastFrame,
+												  0, _pointsPerSubBuffer * sizeof(vec3));
+					_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::AttributeFrame1 : GPUResources::SSBOSlots::AttributeFrame2, 
+					                              GPUResources::GPUBinding::Attribute,
+												  0, _pointsPerSubBuffer * sizeof(u32));
+					_GPUResources.bindBufferRange(_prevBufferId == 0 ? GPUResources::SSBOSlots::AttributeFrame1 : GPUResources::SSBOSlots::AttributeFrame2,
+					                              GPUResources::GPUBinding::AttributeLastFrame,
+												  0, _pointsPerSubBuffer * sizeof(u32));
 					cloud->_GPUResources.bindBuffer(GPUResources::SSBOSlots::CompactionInfo, GPUResources::GPUBinding::CompactionInfo);
 
 					const u32 numInvocations = cloud->_numCompactInfo * cloud->_maxPointsToMove;
@@ -493,10 +501,12 @@ void Nimbus::Renderer::render() {
 						_computeDepthBufferShader->setUniform("pointsOffset", offset);
 						_computeDepthBufferShader->setUniform("mModelViewProj", mvpMatrix);
 						_computeDepthBufferShader->setUniform("windowSize", _appState->_viewportSize);
-						_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Position, GPUResources::GPUBinding::Position,
-													  _pointsPerSubBuffer * _currentBufferId * sizeof(vec3), _pointsPerSubBuffer * sizeof(vec3));
-						_GPUResources.bindBufferRange(GPUResources::SSBOSlots::Attribute, GPUResources::GPUBinding::Attribute,
-													  _pointsPerSubBuffer * _currentBufferId * sizeof(u32), _pointsPerSubBuffer * sizeof(u32));
+						_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::PositionFrame1 : GPUResources::SSBOSlots::PositionFrame2,
+						                              GPUResources::GPUBinding::Position,
+													  0, _pointsPerSubBuffer * sizeof(vec3));
+						_GPUResources.bindBufferRange(_currentBufferId == 0 ? GPUResources::SSBOSlots::AttributeFrame1 : GPUResources::SSBOSlots::AttributeFrame2, 
+						                              GPUResources::GPUBinding::Attribute,
+													  0, _pointsPerSubBuffer * sizeof(u32));
 						_GPUResources.bindBuffer(GPUResources::SSBOSlots::DepthBuffer, GPUResources::GPUBinding::DepthBuffer);
 						i32 xNumGroups = ComputeShader::getNumGroups(numPoints);
 						i32 xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, numPoints);

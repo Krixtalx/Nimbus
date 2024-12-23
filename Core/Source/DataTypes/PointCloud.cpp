@@ -61,8 +61,8 @@ void Nimbus::PointCloud::drawModel(dmat4 viewProjMatrix) {
 		_material->applyMaterial();
 
 		if (!_position.empty()) {
-			_GPUResources.bindBuffer(GPUResources::SSBOSlots::Position, GPUResources::GPUBinding::Position);
-			_GPUResources.bindBuffer(GPUResources::SSBOSlots::Attribute, GPUResources::GPUBinding::Attribute);
+			_GPUResources.bindBuffer(GPUResources::SSBOSlots::PositionFrame1, GPUResources::GPUBinding::Position);
+			_GPUResources.bindBuffer(GPUResources::SSBOSlots::AttributeFrame1, GPUResources::GPUBinding::Attribute);
 			if (getMeshletNumber() > 0)
 				_GPUResources.bindBuffer(GPUResources::SSBOSlots::CullingBuffer, GPUResources::GPUBinding::CullingBuffer);
 			/*if (!_enableDebugView) {
