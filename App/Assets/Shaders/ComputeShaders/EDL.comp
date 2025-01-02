@@ -4,7 +4,7 @@
 #extension GL_ARB_compute_variable_group_size: enable
 
 layout(std430, binding = 0) restrict readonly buffer depthBuffer {
-    uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
+    uint64_t _depth[]; //Los 32 bits más significativos son para la profundidad, los 32 restantes para el atributo del punto.
 };
 
 uniform float zNear, zFar;

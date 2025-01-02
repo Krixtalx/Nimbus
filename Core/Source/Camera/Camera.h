@@ -56,6 +56,10 @@ namespace Nimbus {
 		{
 			return _properties._zFar;
 		}
+		float getFoV() const
+		{
+			return _properties._fovX;
+		}
 
 		void saveCamera();
 		void setBottomLeftCorner(const vec2& bottomLeft);
