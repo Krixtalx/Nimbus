@@ -472,7 +472,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 			}
 		}
 		asyncCalls.clear();
-		while (cloudNames.size() > 1) {
+		while (cloudNames.size() > 1 && asyncCalls.size() < 20) {
 			auto cloudName1 = cloudNames.front();
 			cloudNames.pop();
 			auto cloudName2 = cloudNames.front();
