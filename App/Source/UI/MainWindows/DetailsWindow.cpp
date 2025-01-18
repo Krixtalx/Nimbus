@@ -278,33 +278,26 @@ bool Nimbus::DetailsWindow::makePCloudItemInspector() const {
 		ImGui::TableNextColumn();
 
 		GuiUtilities::InputText(SCENEITEM_MATERIAL, "details_cloud_matname", &selectedCloud->_material->_name, "", ImGuiInputTextFlags_ReadOnly, true);
-		// ImGui::TableNextColumn();
-		// GuiUtilities::setNextTableItemAlign(WINDOW_DETAILS, false);
-		// if (GuiUtilities::Button(WINDOW_DETAILS, "details_cloud_showmatbutton")) {
-		// 	int c = 0;
-		// 	auto matBegin = Nimbus::MaterialList::getInstance()->getBegin();
-		// 	const auto matEnd = Nimbus::MaterialList::getInstance()->getEnd();
-		// 	for (; matBegin != matEnd; ++matBegin, c++) {
-		// 		if (selectedCloud->_material->_name == matBegin->first) {
-		// 			InspectorWindow::setInspectorItem(matBegin->first, InspectorWindow::SceneItemType::Material, c);
-		//
-		// 			_shaderInspectorShSel = _shaderInspectorSubrutSel = _shaderInspectorUnifSel = -1;
-		// 		}
-		// 	}
-		// }
 
 		// Point count
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 
-		int pCount = selectedCloud->getNumberOfPoints();
-		GuiUtilities::InputInt(DETAILS_PCLOUD_POINTCOUNT, "details_cloud_pcount", &pCount, ImGuiInputTextFlags_ReadOnly, true);
+		u64 pCount = selectedCloud->getNumberOfPoints();
+		//GuiUtilities::InputInt(DETAILS_PCLOUD_POINTCOUNT, "details_cloud_pcount", &pCount, ImGuiInputTextFlags_ReadOnly, true);
+		ImGui::Text(("Point number: " + std::to_string(pCount)).c_str());
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 
 		int meshletCount = selectedCloud->getMeshletNumber();
 		GuiUtilities::InputInt(GENERIC_MESHLET, "details_cloud_meshlets", &meshletCount, ImGuiInputTextFlags_ReadOnly, true);
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+
+		int meshletSize = selectedCloud->getMeshletSize();
+		GuiUtilities::InputInt(GENERIC_MESHLET_SIZE, "details_cloud_meshlets_size", &meshletSize, ImGuiInputTextFlags_ReadOnly, true);
 
 		ImGui::EndTable();
 	}

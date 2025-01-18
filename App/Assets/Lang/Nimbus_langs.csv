@@ -237,6 +237,7 @@ GENERIC_LOGIN|Log in|Iniciar sesión
 GENERIC_LOGOUT|Log out|Cerrar sesión
 GENERIC_MANUAL|Manual|Manual
 GENERIC_MESHLET|Meshlet(s)|Meshlet(s)
+GENERIC_MESHLET_SIZE|Meshlet size|Tamaño de los meshlets
 GENERIC_NAME|Name|Nombre
 GENERIC_NAS|NAS|NAS
 GENERIC_NEW|New|Nuevo
