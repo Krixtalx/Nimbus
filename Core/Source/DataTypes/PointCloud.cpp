@@ -317,7 +317,7 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 
 		const auto numPoints = _position.size();
 		auto numMeshlets = static_cast<u32>(_position.size() / _meshletSize);
-		if (numPoints > numMeshlets * _meshletSize)
+		if (numPoints > static_cast<u64>(numMeshlets) * _meshletSize)
 			numMeshlets++;
 		fmt::print("{} meshlets\n", numMeshlets);
 
@@ -443,7 +443,7 @@ void Nimbus::PointCloud::computeMetrics(const std::string& methodName) {
 	spdlog::info("Mean squareness: {}\n", meanSquareness);
 }
 
-u32 Nimbus::PointCloud::computeMeshletSize(const u32 numPoints) {
+u32 Nimbus::PointCloud::computeMeshletSize(const u64 numPoints) {
 	u32 meshletSize = std::pow(2, std::ceil(log2f(numPoints / 100000.f)));
 	meshletSize = std::min(meshletSize, (u32)UINT16_MAX);
 	meshletSize = std::max(meshletSize, 512u);

@@ -129,7 +129,7 @@ namespace Nimbus {
 		std::vector<u32> mortonSorting() const;
 		std::vector<u32> kdTreeSorting();
 		void computeMetrics(const std::string& methodName);
-		static u32 computeMeshletSize(u32 numPoints);
+		static u32 computeMeshletSize(u64 numPoints);
 
 	public:
 		bool										_loading = true;
