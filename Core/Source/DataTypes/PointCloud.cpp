@@ -450,6 +450,28 @@ u32 Nimbus::PointCloud::computeMeshletSize(const u64 numPoints) {
 	return meshletSize;
 }
 
+void Nimbus::PointCloud::recomputeMeshlets()
+{
+	u32 meshletSize = computeMeshletSize(_numPoints);
+	std::ifstream file(_savePath + ".NimbusCloudPos", std::ios::binary);
+	if (file.good()) {
+		std::vector<vec3> meshletPoints;
+		meshletPoints.resize(meshletSize);
+		i64 remainingPoints = _numPoints;
+		u32 currentMeshlet = 0;
+		while (remainingPoints > 0) {
+			file.read((char*)meshletPoints.data(), meshletSize * sizeof(vec3));
+			AABB aabb;
+			for (auto& point : meshletPoints) {
+				aabb.update(point);
+			}
+			_meshlets[currentMeshlet++].aabb = aabb;
+		}
+	}
+	file.close();
+	saveMetadata(_savePath);
+}
+
 //======================== Add/Set methods =========================================
 
 /**

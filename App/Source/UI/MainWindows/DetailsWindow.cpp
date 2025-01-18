@@ -300,6 +300,10 @@ bool Nimbus::DetailsWindow::makePCloudItemInspector() const {
 		GuiUtilities::InputInt(GENERIC_MESHLET_SIZE, "details_cloud_meshlets_size", &meshletSize, ImGuiInputTextFlags_ReadOnly, true);
 
 		ImGui::EndTable();
+
+		if (GuiUtilities::makeButton("Recompute meshlets")) {
+			selectedCloud->recomputeMeshlets();
+		}
 	}
 
 	//GuiUtilities::Checkbox(DETAILS_PCLOUD_DEBUGVIEW, "details_cloud_debugview", &selectedCloud->_enableDebugView);

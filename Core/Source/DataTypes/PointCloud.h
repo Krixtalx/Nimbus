@@ -130,6 +130,7 @@ namespace Nimbus {
 		std::vector<u32> kdTreeSorting();
 		void computeMetrics(const std::string& methodName);
 		static u32 computeMeshletSize(u64 numPoints);
+		void recomputeMeshlets();
 
 	public:
 		bool										_loading = true;
