@@ -466,6 +466,7 @@ void Nimbus::PointCloud::recomputeMeshlets()
 				aabb.update(point);
 			}
 			_meshlets[currentMeshlet++].aabb = aabb;
+			remainingPoints -= meshletSize;
 		}
 	}
 	file.close();
