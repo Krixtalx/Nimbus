@@ -875,7 +875,7 @@ void Nimbus::PointCloud::closeReadStreams() {
 
 void Nimbus::PointCloud::loadMeshletPosition(std::ifstream& rf, const u32 meshletIndex, const u16 numPointsToLoad, const u16 insideMeshletOffset) {
 	if (meshletIndex != _meshlets.size() - 1) {
-		const std::streamoff baseIndex = meshletIndex * _meshletSize + insideMeshletOffset;
+		const std::streamoff baseIndex = static_cast<u64>(meshletIndex) * _meshletSize + insideMeshletOffset;
 		rf.seekg(baseIndex * sizeof(vec3));
 		if (_meshlets[meshletIndex].pos.size() >= numPointsToLoad + insideMeshletOffset) {
 			rf.read((char*)&_meshlets[meshletIndex].pos[insideMeshletOffset], sizeof(vec3) * numPointsToLoad);
@@ -891,7 +891,7 @@ void Nimbus::PointCloud::loadMeshletPosition(std::ifstream& rf, const u32 meshle
 
 void Nimbus::PointCloud::loadMeshletAttribute(std::ifstream& rf, const u32 meshletIndex, const u16 numPointsToLoad, const u16 insideMeshletOffset) {
 	if (meshletIndex != _meshlets.size() - 1) {
-		const std::streamoff baseIndex = meshletIndex * _meshletSize + insideMeshletOffset + _attributeBand * _numPoints;
+		const std::streamoff baseIndex = static_cast<u64>(meshletIndex) * _meshletSize + insideMeshletOffset + _attributeBand * _numPoints;
 		rf.seekg(baseIndex * sizeof(u32));
 		if (_meshlets[meshletIndex].att.size() >= numPointsToLoad + insideMeshletOffset) {
 			rf.read((char*)&_meshlets[meshletIndex].att[insideMeshletOffset], sizeof(u32) * numPointsToLoad);
