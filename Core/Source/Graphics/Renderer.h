@@ -47,6 +47,7 @@ namespace Nimbus {
 
 		i32 _newPointsBufferSize;
 		u32 _pointsPerSubBuffer;
+		u32 _pointBucket;
 		u8 _numBuffers;
 		u8 _currentBufferId;
 		u8 _prevBufferId;

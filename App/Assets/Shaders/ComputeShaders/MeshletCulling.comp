@@ -62,7 +62,7 @@ uint16_t computePointsToRender(AABB box) {
     mult = clamp(mult, 0, 1);
 //    if(numPixels > 0)
 //        numPixels = max(1, numPixels);
-    uint16_t numPoints = (uint16_t)(numPixels * 60 * mult);
+    uint16_t numPoints = (uint16_t)(numPixels * mult);
     numPoints = clamp(numPoints, (uint16_t)0, (uint16_t) meshletSize);
 //    if(extent < meanMeshletExtent*5)
 //        numPoints = clamp(numPoints, (uint16_t)0, (uint16_t) meshletSize);
