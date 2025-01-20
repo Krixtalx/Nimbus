@@ -78,7 +78,7 @@ void main() {
             imageStore(colorOutput, pixelCoords, color);
         } else {
             vec4 finalColor = vec4(0, 0, 0, 0);
-            const int neightbourSize = 0;
+            const int neightbourSize = 3;
             for (int x = max(pixelCoords.x - neightbourSize, 0); x <= min(pixelCoords.x + neightbourSize, imgSize.x - 1); x++) {
                 for (int y = max(pixelCoords.y - neightbourSize, 0); y <= min(pixelCoords.y + neightbourSize, imgSize.y - 1); y++) {
                     uint pixelId = y * imgSize.x + x;
