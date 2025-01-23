@@ -27,6 +27,7 @@ public:
 	void update(const dvec3& point);
 
 	//friend std::ostream& operator<<(std::ostream& os, const AABB& aabb);
+	bool operator!=(const AABB& aabb);
 
 	bool rayIntersects(const vec3& origin, const vec3& direction) const;
 	bool aabbIntersects(const AABB& o) const;

@@ -178,8 +178,8 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 
 	// Observer
 	InputManager* inputManager = InputManager::getInstance();
-	inputManager->suscribeResize(this);
-	inputManager->suscribeScreenshot(this);
+	inputManager->subscribeResize(this);
+	inputManager->subscribeScreenshot(this);
 
 	_fileWatcher.addWatch("Assets/Shaders/ComputeShaders", this);
 	_fileWatcher.watch();
@@ -192,7 +192,7 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &GPUResources::maxMemoryPerSSBO);
 	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &alignment);
 	_newPointsBufferSize = 3000000;
-	_pointBucket = 10000000;
+	_pointBucket = 30000000;
 	_pointsPerSubBuffer = GPUResources::maxMemoryPerSSBO / sizeof(glm::vec3);
 	_pointDataToSend.resize(_newPointsBufferSize);
 	_numBuffers = 2;
@@ -225,7 +225,7 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 	u32 pointsUsed = 0;
 	for (auto& pointsToRender : pc->_currentFrameCulling) {
 		if (pointsToRender > 0 && pointsToRender < pc->_meshletSize) {
-			u32 temp = ((float)pointsToRender / _appState->_renderedPoints[_currentBufferId]) * _pointBucket;
+			u32 temp = ((float)pointsToRender / std::max(_appState->_renderedPoints[_currentBufferId], GLuint(1))) * _pointBucket;
 			pointsToRender = std::min(temp, pc->_meshletSize);
 			pointsUsed += pointsToRender;
 		}

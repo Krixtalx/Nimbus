@@ -10,6 +10,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#include <algorithm>
+
 #include "IO/FileManager.h"
 
 
@@ -108,26 +110,13 @@ const vec2 Nimbus::InputManager::_defaultCursorPosition = vec2(-1.0f, -1.0f);
 // Public methods
 
 Nimbus::InputManager::InputManager() : _lastCursorPosition(_defaultCursorPosition), _leftClickPressed(false), _rightClickPressed(false), _scrollClickPressed(false) {
-	this->buildMoveRelatedBuffers();
+	this->buildMovementBuffers();
+	this->updateMovementSteps();
 }
 
-void Nimbus::InputManager::buildMoveRelatedBuffers() {
-	_movementMultiplier = 7.0f;
-	_moveSpeedUp = 1.0f;
-
-	_moveSpeed = std::vector<float>(static_cast<size_t>(NUM_EVENTS), .0f);
-	_moveSpeed[BOOM] = 0.05f;
-	_moveSpeed[DOLLY] = 0.1f;
-	_moveSpeed[ORBIT_XZ] = 0.08f;
-	_moveSpeed[ORBIT_Y] = 0.07f;
-	_moveSpeed[PAN] = 0.03f;
-	_moveSpeed[TILT] = 0.03f;
-	_moveSpeed[TRUCK] = 0.03f;
-	_moveSpeed[ZOOM] = 0.01f;
-	_moveSpeed[ROTATION] = 0.8f;
-
-	_eventKey = std::vector<ivec2>(static_cast<size_t>(NUM_EVENTS), ivec2(0));
-
+void Nimbus::InputManager::buildMovementBuffers()
+{
+	_eventKey = std::vector(NUM_EVENTS, ivec2(0));
 	_eventKey[BOOM] = ivec2(GLFW_KEY_UP, GLFW_KEY_DOWN);
 	_eventKey[DOLLY] = ivec2(GLFW_KEY_W, GLFW_KEY_S);
 	_eventKey[DOLLY_SPEED_UP] = ivec2(GLFW_MOD_SHIFT);
@@ -140,8 +129,6 @@ void Nimbus::InputManager::buildMoveRelatedBuffers() {
 	_eventKey[TRUCK] = ivec2(GLFW_KEY_D, GLFW_KEY_A);
 	_eventKey[ROTATION] = ivec2(GLFW_KEY_Q, GLFW_KEY_E);
 	_eventKey[zoomOutAnim] = ivec2(GLFW_KEY_1);
-
-	_moves = std::vector<uint32_t>(static_cast<size_t>(NUM_EVENTS), 0);
 }
 
 bool Nimbus::InputManager::mouseMovement(const float xPos, const float yPos) {
@@ -257,19 +244,54 @@ void Nimbus::InputManager::init(GLFWwindow* window) {
 	glfwSetWindowSizeLimits(window, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
 }
 
-void Nimbus::InputManager::suscribeResize(ResizeListener* listener) {
+void Nimbus::InputManager::updateMovementSteps() {
+	_movementMultiplier = 1.0;
+	_moveSpeedUp = 1.0f;
+
+	// Calculate the movement speed based on the scene dimensions
+	Renderer* renderer = Renderer::getInstance();
+	if (renderer->getActiveScene())
+	{
+		AABB aabb;
+		for (auto& pointCloud : renderer->getActiveScene()->_pointClouds | std::views::values)
+			aabb.update(pointCloud->getAABB());
+
+		if (aabb != AABB())
+		{
+			const vec3 aabbDim = aabb.size();
+			const float size = std::sqrt(aabbDim.x * aabbDim.x + aabbDim.y * aabbDim.y + aabbDim.z * aabbDim.z);
+
+			_movementMultiplier = std::log(size + 1.0f) / 2.0f;
+		}
+	}
+
+	_moveSpeed = std::vector<float>(static_cast<size_t>(NUM_EVENTS), .0f);
+	_moveSpeed[BOOM] = 0.05f * _movementMultiplier;
+	_moveSpeed[DOLLY] = 0.1f * _movementMultiplier;
+	_moveSpeed[ORBIT_XZ] = 0.05f * _movementMultiplier;
+	_moveSpeed[ORBIT_Y] = 0.07f * _movementMultiplier;
+	_moveSpeed[PAN] = 0.01f * _movementMultiplier;
+	_moveSpeed[TILT] = 0.03f * _movementMultiplier;
+	_moveSpeed[TRUCK] = 0.03f * _movementMultiplier;
+	_moveSpeed[ZOOM] = 0.01f * _movementMultiplier;
+	_moveSpeed[ROTATION] = 2.0f * _movementMultiplier;
+
+	_moves = std::vector<uint32_t>(static_cast<size_t>(NUM_EVENTS), 0);
+}
+
+void Nimbus::InputManager::subscribeResize(ResizeListener* listener) {
 	_resizeListeners.push_back(listener);
 }
 
-void Nimbus::InputManager::suscribeScreenshot(ScreenshotListener* listener) {
+void Nimbus::InputManager::subscribeScreenshot(ScreenshotListener* listener) {
 	_screenshotListeners.push_back(listener);
 }
 
-void Nimbus::InputManager::suscribeMouseButton(MouseButtonListener* listener) {
+void Nimbus::InputManager::subscribeMouseButton(MouseButtonListener* listener) {
 	_mouseButtonListeners.push_back(listener);
 }
 
-void Nimbus::InputManager::unsuscribeMouseButton(const MouseButtonListener* listener) {
+void Nimbus::InputManager::unsubscribeMouseButton(const MouseButtonListener* listener) {
 	bool found = false;
 	size_t lFound = 0;
 	for (lFound = 0; lFound < _mouseButtonListeners.size() && !found; ++lFound) {
@@ -281,11 +303,11 @@ void Nimbus::InputManager::unsuscribeMouseButton(const MouseButtonListener* list
 	}
 }
 
-void Nimbus::InputManager::suscribeMouseMove(MouseMoveListener* listener) {
+void Nimbus::InputManager::subscribeMouseMove(MouseMoveListener* listener) {
 	_mouseDragListeners.push_back(listener);
 }
 
-void Nimbus::InputManager::unsuscribeMouseMove(const MouseMoveListener* listener) {
+void Nimbus::InputManager::unsubscribeMouseMove(const MouseMoveListener* listener) {
 	bool found = false;
 	size_t lFound = 0;
 	for (lFound = 0; lFound < _mouseDragListeners.size() && !found; ++lFound) {

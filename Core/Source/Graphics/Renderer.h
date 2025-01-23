@@ -106,7 +106,7 @@ namespace Nimbus {
 		std::string getSceneCompleteName() const { return _scenes[_activeScene]->_scenePath + "/" + _scenes[_activeScene]->_sceneName; }
 		std::string getSceneName() const { return _scenes[_activeScene]->_sceneName; }
 		unsigned getCurrentActiveScene() const { return _activeScene; }
-		Scene* getActiveScene() const { return _scenes[_activeScene].get(); }
+		Scene* getActiveScene() const { return _activeScene >= _scenes.size() ? nullptr : _scenes[_activeScene].get(); }
 		ApplicationState* getAppState() const {
 			return _appState;
 		}

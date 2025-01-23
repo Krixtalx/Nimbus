@@ -54,6 +54,11 @@ void AABB::update(const dvec3& point) {
 	if (point.z > _max.z) { _max.z = point.z; }
 }
 
+bool AABB::operator!=(const AABB& aabb)
+{
+	return glm::length(aabb.min() - vec3(_min)) < glm::epsilon<float>() && glm::length(aabb.max() - vec3(_max)) < glm::epsilon<float>();
+}
+
 bool AABB::rayIntersects(const vec3& origin, const vec3& direction) const { // https://web.archive.org/web/20090803054252/http://tog.acm.org/resources/GraphicsGems/gems/RayBox.c
 	static constexpr unsigned NUMDIM = 3;
 	static constexpr unsigned RIGHT = 0;
