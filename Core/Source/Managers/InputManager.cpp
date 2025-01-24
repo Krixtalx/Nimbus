@@ -268,9 +268,9 @@ void Nimbus::InputManager::updateMovementSteps() {
 	_moveSpeed = std::vector<float>(static_cast<size_t>(NUM_EVENTS), .0f);
 	_moveSpeed[BOOM] = 0.05f * _movementMultiplier;
 	_moveSpeed[DOLLY] = 0.1f * _movementMultiplier;
-	_moveSpeed[ORBIT_XZ] = 0.05f * _movementMultiplier;
+	_moveSpeed[ORBIT_XZ] = 0.08f * _movementMultiplier;
 	_moveSpeed[ORBIT_Y] = 0.07f * _movementMultiplier;
-	_moveSpeed[PAN] = 0.01f * _movementMultiplier;
+	_moveSpeed[PAN] = 0.03f * _movementMultiplier;
 	_moveSpeed[TILT] = 0.03f * _movementMultiplier;
 	_moveSpeed[TRUCK] = 0.03f * _movementMultiplier;
 	_moveSpeed[ZOOM] = 0.01f * _movementMultiplier;

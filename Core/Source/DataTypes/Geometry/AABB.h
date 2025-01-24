@@ -12,6 +12,8 @@ public:
 	AABB(const AABB& aabb);
 	~AABB();
 	AABB& operator=(const AABB& aabb);
+	bool operator==(const AABB& aabb) const { return _min == aabb._min && _max == aabb._max; }
+	bool operator!=(const AABB& aabb) const { return !(*this == aabb); }
 
 	dvec3 center() const { return (_max + _min) / 2.0; }
 	AABB dot(const mat4& matrix) const;

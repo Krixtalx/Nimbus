@@ -571,6 +571,7 @@ void Nimbus::Renderer::render() {
 						_composeImageShader->setUniform("firstGradientPoint", first);
 						_composeImageShader->setUniform("secondGradientPoint", second);
 						_composeImageShader->setUniform("lastGradientPoint", last);
+						_composeImageShader->setUniform("cameraFoV", getCamera()->getFoV());
 						if (cloud->_attToUse == Attribute::RGB)
 							_composeImageShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorUnpackingUint");
 						else
@@ -665,6 +666,7 @@ unsigned Nimbus::Renderer::addModel(Model3D* model) {
 		pointCloud->_name += idAppend;
 
 		_scenes[_activeScene]->_pointClouds.insert(std::make_pair(pointCloud->getName(), std::unique_ptr<PointCloud>(pointCloud)));
+		InputManager::getInstance()->updateMovementSteps();
 
 		getCamera()->changed = true;
 		return _scenes[_activeScene]->_pointClouds.size() - 1;
