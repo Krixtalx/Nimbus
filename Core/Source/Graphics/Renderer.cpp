@@ -369,14 +369,12 @@ void Nimbus::Renderer::render() {
 			//	}
 			//}
 
-			/*_scenes[_activeScene]->getActiveCamera()->orbitY(_appState->inputDeltaTime);
-			_scenes[_activeScene]->getActiveCamera()->orbitXZ(_appState->inputDeltaTime * std::cos(_frametime));
-			_scenes[_activeScene]->getActiveCamera()->zoom(_appState->inputDeltaTime * std::cos(_frametime)*0.5f);*/
 			if (_zoomOutAnim) {
 				++_frameNumber;
 				_frametime += _appState->deltaTime;
-				_scenes[_activeScene]->getActiveCamera()->truck(_appState->deltaTime*45);
-				_scenes[_activeScene]->getActiveCamera()->zoom(_appState->deltaTime * std::cos(_frametime) * 0.25f);
+				_scenes[_activeScene]->getActiveCamera()->orbitY(_appState->deltaTime);
+				_scenes[_activeScene]->getActiveCamera()->orbitXZ(_appState->deltaTime * std::cos(_frametime));
+				_scenes[_activeScene]->getActiveCamera()->zoom(_appState->deltaTime * std::cos(_frametime) * 0.5f);
 			} else {
 				_frameNumber = 0;
 				_frametime = 0;

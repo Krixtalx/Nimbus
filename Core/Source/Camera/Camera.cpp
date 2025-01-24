@@ -20,7 +20,7 @@ Nimbus::Camera::Camera(const uint16_t width, const uint16_t height) : _name("New
 	//this->_properties._lookAt = vec3(0.0f, 3.0f, 0.0f);
 	this->_properties._up = vec3(0.0f, 1.0f, 0.0f);
 
-	this->_properties._zNear = 0.1f;
+	this->_properties._zNear = 0.0f;
 	this->_properties._zFar = 6000.0f;
 
 	this->_properties._width = width;
