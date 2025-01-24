@@ -1,3 +1,4 @@
+// ReSharper disable CppExpressionWithoutSideEffects
 #include "CorePch.h"
 #include "Renderer.h"
 
@@ -8,6 +9,7 @@
 #include "Shaders/ComputeShader.h"
 #include "Shaders/RenderingShader.h"
 #include "Shaders/ShaderManager.h"
+#include "Utilities/Image.h"
 
 /**
  * \brief Callback mensajes de debug de OpenGL.
@@ -58,11 +60,21 @@ void message_callback(GLenum source, GLenum type, u32 id, GLenum severity, GLsiz
 
 // Public methods
 
-Nimbus::Renderer::Renderer() : _appState(nullptr), _activeScene(0), _screenshoter(nullptr),
-_triangleMeshShaderProgram(nullptr), _pointCloudShaderProgram(nullptr),
-_gridShaderProgram(nullptr), _resetDepthBuffer(nullptr), _meshletCullingShader(nullptr),
-_computeDepthBufferShader(nullptr), _composeImageShader(nullptr),
-_gridVAO(0) {
+Nimbus::Renderer::Renderer() : _appState(nullptr), _activeScene(0),
+                               _triangleMeshShaderProgram(nullptr), _pointCloudShaderProgram(nullptr),
+                               _gridShaderProgram(nullptr), _meshletsAABBDrawProgram(nullptr),
+                               _resetDepthBuffer(nullptr), _meshletCullingShader(nullptr),
+                               _compactPositionsBuffer(nullptr),
+                               _copyPositionsShader(nullptr),
+                               _computeDepthBufferShader(nullptr), _composeImageShader(nullptr), _EDLShader(nullptr),
+                               _newPointsBufferSize(0), _pointsPerSubBuffer(0),
+                               _pointBucket(0),
+                               _numBuffers(0),
+                               _currentBufferId(0),
+                               _prevBufferId(0),
+                               _alignment(0),
+                               _gridVAO(0)
+{
 }
 
 void Nimbus::Renderer::updateDeltaTime() const {
@@ -103,7 +115,6 @@ void Nimbus::Renderer::loadRenderShaders() {
 // Private methods
 
 Nimbus::Renderer::~Renderer() {
-	delete _screenshoter;
 	glDeleteVertexArrays(1, &_gridVAO);
 }
 
@@ -122,16 +133,15 @@ void Nimbus::Renderer::resizeEvent(const u16 width, const u16 height) {
 
 void Nimbus::Renderer::screenshotEvent() {
 	const ivec2 size = _appState->_viewportSize;
-	const ivec2 newSize = ivec2(_appState->_viewportSize.x * _appState->_screenshotFactor, _appState->_viewportSize.y * _appState->_screenshotFactor);
+	auto* pixels = new std::vector<uint8_t>(static_cast<int>(size.x) * static_cast<int>(size.y) * 4);
+	glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels->data());
 
-	_screenshoter->modifySize(newSize.x, newSize.y);
-	_screenshoter->bindFramebuffer();
-	this->resizeEvent(newSize.x, newSize.y);
-	this->render();
-	const bool success = _screenshoter->saveImage(_appState->_screenshotFilenameBuffer + std::to_string(_appState->deltaTime));
+	// Correct image orientation
+	Image::flipImageVertically(*pixels, size.x, size.y, 4);
 
-	this->resizeEvent(size.x, size.y);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// Launch image writing in a thread
+	std::thread writeImageThread(&threadedWriteImage, pixels, _appState->_screenshotFilenameBuffer + std::to_string(_appState->deltaTime) + ".png", size.x, size.y);
+	writeImageThread.detach();
 }
 
 void Nimbus::Renderer::reloadShaders() {
@@ -144,7 +154,6 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	_appState = appState;
 	_appState->_viewportSize = ivec2(width, height);
 	_scenes.push_back(std::make_unique<Scene>(width, height));
-	_screenshoter = new FBOScreenshot(width, height);
 	_renderFBO = std::make_unique<FBORender>(width, height);
 
 	ComputeShader::initializeStaticVariables();
@@ -174,7 +183,6 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 
 	this->loadComputeShaders();
 	this->loadRenderShaders();
-	//this->createLights();
 
 	// Observer
 	InputManager* inputManager = InputManager::getInstance();
@@ -190,9 +198,9 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	}
 
 	glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &GPUResources::maxMemoryPerSSBO);
-	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &alignment);
+	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &_alignment);
 	_newPointsBufferSize = 3000000;
-	_pointBucket = 30000000;
+	_pointBucket = 80000000;
 	_pointsPerSubBuffer = GPUResources::maxMemoryPerSSBO / sizeof(glm::vec3);
 	_pointDataToSend.resize(_newPointsBufferSize);
 	_numBuffers = 2;
@@ -211,7 +219,7 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 
 u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& currentIndex, u32& pointsToSend) {
 	auto& pcGPUResources = pc->_GPUResources;
-	const u32 numMeshlets = pc->getMeshletNumber();
+	const u32 numMeshlets = static_cast<u32>(pc->getMeshletNumber());
 
 	std::vector<PointCloud::CompactInfo> compactInfoForGPU;
 	compactInfoForGPU.reserve(numMeshlets / 3);
@@ -225,11 +233,13 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 	u32 pointsUsed = 0;
 	for (auto& pointsToRender : pc->_currentFrameCulling) {
 		if (pointsToRender > 0 && pointsToRender < pc->_meshletSize) {
-			u32 temp = ((float)pointsToRender / std::max(_appState->_renderedPoints[_currentBufferId], GLuint(1))) * _pointBucket;
+			u32 temp = (static_cast<float>(pointsToRender) / std::max(_appState->_renderedPoints[_currentBufferId], static_cast<GLuint>(1))) * _pointBucket;
 			pointsToRender = std::min(temp, pc->_meshletSize);
 			pointsUsed += pointsToRender;
 		}
 	}
+
+	std::cout << pointsUsed << "," << _frameNumber << std::endl;
 	/*
 	u32 remainingPoints = _pointBucket - pointsUsed;
 	bool keepGoing = true;
@@ -311,6 +321,14 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 	}
 
 	return pointsToSend;
+}
+
+void Nimbus::Renderer::threadedWriteImage(std::vector<uint8_t>* pixels, const std::string& filename, uint16_t width,
+	uint16_t height)
+{
+	const auto image = new Image(pixels->data(), width, height, 4);
+	image->saveImage(filename);
+	delete pixels;
 }
 
 void Nimbus::Renderer::render() {

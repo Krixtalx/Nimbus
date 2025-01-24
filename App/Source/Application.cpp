@@ -7,6 +7,9 @@
 #include <GLFW/glfw3.h>
 
 #include "Managers/MemoryManager.h"
+
+#include "Utilities/Image.h"
+
 #if _WIN32
 #include "UI/Popups/ConfirmPopup.h"
 #include "libloaderapi.h"

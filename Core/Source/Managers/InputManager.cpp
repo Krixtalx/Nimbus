@@ -124,7 +124,7 @@ void Nimbus::InputManager::buildMovementBuffers()
 	_eventKey[ORBIT_Y] = ivec2(GLFW_KEY_X);
 	_eventKey[PAN] = ivec2(GLFW_KEY_P);
 	_eventKey[RESET] = ivec2(GLFW_KEY_R);
-	_eventKey[SCREENSHOT] = ivec2(GLFW_KEY_PRINT_SCREEN);
+	_eventKey[SCREENSHOT] = ivec2(GLFW_KEY_K);
 	_eventKey[TILT] = ivec2(GLFW_KEY_T);
 	_eventKey[TRUCK] = ivec2(GLFW_KEY_D, GLFW_KEY_A);
 	_eventKey[ROTATION] = ivec2(GLFW_KEY_Q, GLFW_KEY_E);

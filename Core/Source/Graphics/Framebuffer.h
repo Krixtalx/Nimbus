@@ -4,7 +4,7 @@ namespace Nimbus {
 	class Framebuffer {
 	protected:
 		uint32_t	_id;
-		ivec2	_size;
+		ivec2		_size;
 
 		void checkFramebufferState();
 

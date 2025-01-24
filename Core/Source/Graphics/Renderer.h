@@ -1,8 +1,7 @@
 #pragma once
-#include "FBORender.h"
-#include "FBOScreenshot.h"
-#include "GPUResources.h"
 
+#include "FBORender.h"
+#include "GPUResources.h"
 #include "Scene.h"
 #include "Managers/InputManager.h"
 #include "efsw/efsw.hpp"
@@ -21,7 +20,6 @@ namespace Nimbus {
 		ApplicationState* _appState;
 		std::vector<std::unique_ptr<Scene>> _scenes;
 		unsigned _activeScene;
-		FBOScreenshot* _screenshoter;
 		std::unique_ptr<FBORender> _renderFBO;
 		RenderingShader* _triangleMeshShaderProgram;
 		RenderingShader* _pointCloudShaderProgram;
@@ -52,7 +50,7 @@ namespace Nimbus {
 		u8 _currentBufferId;
 		u8 _prevBufferId;
 
-		GLint	alignment;
+		GLint _alignment;
 
 		u32 _gridVAO;
 
@@ -69,7 +67,8 @@ namespace Nimbus {
 		void updateDeltaTime() const;
 		void loadComputeShaders();
 		void loadRenderShaders();
-		u32 generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& currentIndex, u32& pointsToSend);
+		u32 generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& currentIndex, u32& pointsToSend);	protected:
+		static void threadedWriteImage(std::vector<uint8_t>* pixels, const std::string& filename, uint16_t width, uint16_t height);
 
 	public:
 		~Renderer() override;
@@ -85,7 +84,6 @@ namespace Nimbus {
 		//			Scene
 		//==========================
 
-
 		// - Adders
 		unsigned addModel(Model3D* model); // newModel
 		unsigned addLight() const;
@@ -93,14 +91,12 @@ namespace Nimbus {
 
 		// - Deleters
 		void deletePointCloud(const std::string& cloudName) const; // deleteModel 
-		void deleteTriangleMesh(const std::string& meshName) const;
 		void deleteLight(unsigned lightIdx) const;
 		void deleteCamera(unsigned cameraIdx) const;
 		bool deleteScene();
 
 		// - Getters
 		PointCloud* getPointCloud(const std::string& cloudName) const; // getModel
-		TriangleMesh* getTriangleMesh(const std::string& meshName) const;
 		Camera* getCamera() const { return _scenes[_activeScene]->getActiveCamera(); }
 		bool sceneDirty() const { return _scenes[_activeScene]->dirty; }
 		std::string getSceneCompleteName() const { return _scenes[_activeScene]->_scenePath + "/" + _scenes[_activeScene]->_sceneName; }

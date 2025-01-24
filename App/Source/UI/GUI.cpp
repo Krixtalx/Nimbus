@@ -16,9 +16,9 @@
 #include "Popups/PCloudClassifyPopup.h"
 #include "UI/InterfaceAdapter.h"
 #include "UI/Popups/FileDialogPopup.h"
-#include <UI/Popups/PopupSystem.h>
-
+#include "UI/Popups/PopupSystem.h"
 #include "UI/Popups/ConfirmPopup.h"
+#include "Utilities/Image.h"
 
 
 bool Nimbus::GUI::WINDOW_CLOSE_PENDING = false;
