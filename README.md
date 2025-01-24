@@ -1,7 +1,7 @@
 # Virtualized Point Cloud Rendering
 
 ![c++](https://img.shields.io/github/languages/top/Krixtalx/Nimbus) 
-![opengl](https://img.shields.io/badge/-OpenGL_4.5-yellow?logo=opengl)
+![opengl](https://img.shields.io/badge/-OpenGL_4.6-yellow?logo=opengl)
 
 ![License: CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/80x15.png)
 
@@ -23,7 +23,7 @@ The main feature of this project is the virtualization of point cloud data. Howe
     <img src="readme_assets/occlusion.png" width=400/>
 </p>
 
-We also propose another aggregation of points into meshlets (coined pointlets in our paper) using Hilbert encoding rather than Morton. While not perfect, it mitigates the spatial jumps reported in Morton. Note that a large pointlet is less likely to be discarded during frustum culling, and therefore, we would project points into our viewport even though they are not visible. 
+Additionally, we propose another aggregation of points into meshlets (coined pointlets in our paper) using Hilbert encoding rather than Morton. While not perfect, it mitigates the spatial jumps reported in Morton. Note that a large pointlet is less likely to be discarded during frustum culling, and therefore, we would project points into our viewport even though they are not visible. 
 
 <p align="center">
     <img src="readme_assets/sort_spot.png" width=400/>
@@ -32,8 +32,9 @@ We also propose another aggregation of points into meshlets (coined pointlets in
 # Building
 
 - Clone the repository.
-- Go to `Project scripts` and execute a setup file depending on your operative system. We provide it for Linux and Windows O.S.
-- Compile the project with Visual Studio after opening `Nimbus.sln`. 
+- Go to `Project scripts` and execute a setup file depending on your operative system. We provide it for Windows O.S.
+- Compile the project with Visual Studio 2022 after opening `Nimbus.sln`.
+- We use [Vcpkg](https://github.com/microsoft/vcpkg) as a dependency manager. Make sure you have it installed and integrated into Visual Studio to automatically download and compile dependencies.
 
 # How to cite
 
