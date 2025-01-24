@@ -20,6 +20,7 @@ namespace Nimbus {
 		ApplicationState* _appState;
 		std::vector<std::unique_ptr<Scene>> _scenes;
 		unsigned _activeScene;
+		unsigned _meshletCullingPointsSum[3];
 		std::unique_ptr<FBORender> _renderFBO;
 		RenderingShader* _triangleMeshShaderProgram;
 		RenderingShader* _pointCloudShaderProgram;
@@ -45,7 +46,6 @@ namespace Nimbus {
 
 		i32 _newPointsBufferSize;
 		u32 _pointsPerSubBuffer;
-		u32 _pointBucket;
 		u8 _numBuffers;
 		u8 _currentBufferId;
 		u8 _prevBufferId;

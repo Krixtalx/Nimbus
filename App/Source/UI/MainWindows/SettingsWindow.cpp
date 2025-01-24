@@ -109,6 +109,11 @@ void Nimbus::SettingsWindow::renderWindow() {
 				ImGui::TableNextColumn();
 				GuiUtilities::ColorPicker(SETTINGS_GENERAL_BGCOLOR, "bgroundColor", appState->_backgroundColor, 0, true);
 
+				//Points bucket
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::SliderInt("Points bucket", &appState->_pointsBucket, 1000000, 90000000);
+
 				// Draw grid
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();

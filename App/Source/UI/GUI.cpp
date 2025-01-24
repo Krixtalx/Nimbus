@@ -281,8 +281,8 @@ void Nimbus::GUI::initialize(GLFWwindow* window, const int openGLMinorVersion) {
 	_coreWindows.push_back(new InspectorWindow("win_inspector", WINDOW_INSPECTOR, true, ImGuiWindowFlags_HorizontalScrollbar));
 	_coreWindows.push_back(new DetailsWindow("win_details", WINDOW_DETAILS, true, ImGuiWindowFlags_HorizontalScrollbar));
 	_coreWindows.push_back(new MaterialsWindow("win_mats", WINDOW_MATERIALS, false, 0));
-	_coreWindows.push_back(new StatsWindow("win_stats", WINDOW_STATS, false, 0));
-	_coreWindows.push_back(new SettingsWindow("win_settings", WINDOW_SETTINGS, false, 0));
+	_coreWindows.push_back(new StatsWindow("win_stats", WINDOW_STATS, true, 0));
+	_coreWindows.push_back(new SettingsWindow("win_settings", WINDOW_SETTINGS, true, 0));
 	//_coreWindows.push_back(new CameraAxisWindow("win_camgizmo", WINDOW_CAMERAGIZMO, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground));//
 	//_coreWindows.push_back(new DebugWindow("win_debug", WINDOW_DETAILS, true, 0));
 

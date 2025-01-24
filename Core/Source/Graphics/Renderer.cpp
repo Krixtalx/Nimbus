@@ -68,7 +68,6 @@ Nimbus::Renderer::Renderer() : _appState(nullptr), _activeScene(0),
                                _copyPositionsShader(nullptr),
                                _computeDepthBufferShader(nullptr), _composeImageShader(nullptr), _EDLShader(nullptr),
                                _newPointsBufferSize(0), _pointsPerSubBuffer(0),
-                               _pointBucket(0),
                                _numBuffers(0),
                                _currentBufferId(0),
                                _prevBufferId(0),
@@ -200,7 +199,6 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &GPUResources::maxMemoryPerSSBO);
 	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &_alignment);
 	_newPointsBufferSize = 3000000;
-	_pointBucket = 80000000;
 	_pointsPerSubBuffer = GPUResources::maxMemoryPerSSBO / sizeof(glm::vec3);
 	_pointDataToSend.resize(_newPointsBufferSize);
 	_numBuffers = 2;
@@ -230,38 +228,16 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 	pc->_GPUResources.waitForLockedRange(GPUResources::SSBOSlots::CullingBuffer);
 	pc->_GPUResources.readGPUMappedMemory(GPUResources::SSBOSlots::CullingBuffer, pc->_currentFrameCulling.data(), numMeshlets);
 
-	u32 pointsUsed = 0;
+	_appState->_renderedPoints[_currentBufferId] = 0;
 	for (auto& pointsToRender : pc->_currentFrameCulling) {
 		if (pointsToRender > 0 && pointsToRender < pc->_meshletSize) {
-			u32 temp = (static_cast<float>(pointsToRender) / std::max(_appState->_renderedPoints[_currentBufferId], static_cast<GLuint>(1))) * _pointBucket;
+			u32 temp = (static_cast<float>(pointsToRender) / std::max(_meshletCullingPointsSum[_currentBufferId], static_cast<GLuint>(1))) * _appState->_pointsBucket;
 			pointsToRender = std::min(temp, pc->_meshletSize);
-			pointsUsed += pointsToRender;
+			_appState->_renderedPoints[_currentBufferId] += pointsToRender;
 		}
 	}
-
-	std::cout << pointsUsed << "," << _frameNumber << std::endl;
-	/*
-	u32 remainingPoints = _pointBucket - pointsUsed;
-	bool keepGoing = true;
-	while (remainingPoints > 0 && keepGoing) {
-		keepGoing = false;
-		for (auto& pointsToRender : pc->_currentFrameCulling) {
-			if (pointsToRender > 0 && pointsToRender < pc->_meshletSize) {
-				u32 temp = pointsToRender + ((float)pointsToRender / _appState->_renderedPoints[_currentBufferId]) * remainingPoints;
-				pointsToRender = std::min(temp, pc->_meshletSize);
-				pointsUsed += pointsToRender;
-				keepGoing = true;
-			}
-		}
-		remainingPoints = _pointBucket - pointsUsed;
-	}
-	*/
 
 	for (u32 i = 0; i < numMeshlets; ++i) {
-		/*srand(i);
-		vec4 randomColor = vec4((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX, 1);
-		u32 randomColorAsUint = glm::packUnorm4x8(randomColor);*/
-
 		const u16 loadedPointsInGPU = pc->_lastFrameCulling[i];
 		const u16 maxLoadedPoints = std::max(loadedPointsInGPU, pc->_meshlets[i].pointsLoaded);
 		const u16 requiredPoints = std::min(pc->_currentFrameCulling[i], maxLoadedPoints);
@@ -479,7 +455,7 @@ void Nimbus::Renderer::render() {
 			_resetDepthBuffer->execute(numGroups, numWorkGroups);
 			const GLsync resetDepthBufferFence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
-			_GPUResources.readGPUMappedMemory(GPUResources::SSBOSlots::ReadBackData, &_appState->_renderedPoints[_currentBufferId], 1);
+			_GPUResources.readGPUMappedMemory(GPUResources::SSBOSlots::ReadBackData, &_meshletCullingPointsSum[_currentBufferId], 1);
 
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, 14, "BuildBuffer");
 			//Compact buffer

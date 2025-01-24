@@ -27,6 +27,7 @@ namespace Nimbus {
 		bool							_renderWithEDL = true;
 		float							_edlStrength = 300;
 		unsigned						_renderedPoints[3];
+		i32								_pointsBucket = 30000000;
 
 		int								_selectedMeshlet;
 
