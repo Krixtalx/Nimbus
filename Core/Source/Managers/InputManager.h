@@ -68,7 +68,7 @@ namespace Nimbus {
 
 	private:
 		InputManager();
-		void buildMoveRelatedBuffers();
+		void buildMovementBuffers();
 		bool mouseMovement(float xPos, float yPos);
 		void processPressedKeyEvent(int key, int mods);
 		void processReleasedKeyEvent(int key, int mods);
@@ -85,14 +85,15 @@ namespace Nimbus {
 		virtual ~InputManager();
 		static ApplicationState* getApplicationState() { return &_applicationState; }
 		void init(GLFWwindow* window);
+		void updateMovementSteps();
 
 	public:
-		void suscribeResize(ResizeListener* listener);
-		void suscribeScreenshot(ScreenshotListener* listener);
-		void suscribeMouseButton(MouseButtonListener* listener);
-		void unsuscribeMouseButton(const MouseButtonListener* listener);
-		void suscribeMouseMove(MouseMoveListener* listener);
-		void unsuscribeMouseMove(const MouseMoveListener* listener);
+		void subscribeResize(ResizeListener* listener);
+		void subscribeScreenshot(ScreenshotListener* listener);
+		void subscribeMouseButton(MouseButtonListener* listener);
+		void unsubscribeMouseButton(const MouseButtonListener* listener);
+		void subscribeMouseMove(MouseMoveListener* listener);
+		void unsubscribeMouseMove(const MouseMoveListener* listener);
 	};
 }
 
