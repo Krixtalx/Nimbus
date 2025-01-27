@@ -1,14 +1,25 @@
-#version 450
+#version 460
 #extension GL_NV_gpu_shader5 : enable
 #extension GL_NV_shader_atomic_int64: require
 #extension GL_ARB_compute_variable_group_size: enable
 
 layout(std430, binding = 0) restrict readonly buffer depthBuffer {
-    uint64_t _depth[]; //Los 32 bits más significativos son para la profundidad, los 32 restantes para el atributo del punto.
+    uint _depth[]; 
 };
+
+layout (std430, binding = 11) restrict readonly buffer color01Buffer	{ 
+	uint64_t _colorBuffer01[]; 
+};
+
+layout (std430, binding = 12) restrict readonly buffer color02Buffer	{ 
+	uint64_t _colorBuffer02[];
+};
+
+#define EPSILON 0.0000001f
 
 uniform float zNear, zFar;
 uniform float edlStrength;
+uniform vec3 backgroundColor;
 
 ivec2 edlNeighbourhood[4] = { ivec2(1, 0), ivec2(-1, 0), ivec2(0, 1), ivec2(0, -1) };
 
@@ -24,34 +35,85 @@ float linearize(float depth)
 
 float response(ivec2 position, ivec2 windowSize)
 {
-    float depth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(position, windowSize)] >> 32))));
+    float depth = log2(linearize(uintBitsToFloat(_depth[linearizePosition(position, windowSize)])));
     float sum = 0.0;
 
     for (int i = 0; i < 4; i++)
     {
-        ivec2 samplePosition = clamp(position + edlNeighbourhood[i].xy, ivec2(0), windowSize - ivec2(1));
-        float neighbourDepth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(samplePosition, windowSize)] >> 32))));
-        sum += max(0.0, depth - neighbourDepth);
+        ivec2 samplePosition = clamp(position + edlNeighbourhood[i].xy, ivec2(0), windowSize - ivec2(1));	
+		float neighbourDepth = log2(linearize(uintBitsToFloat(_depth[linearizePosition(samplePosition, windowSize)])));
+		sum += max(0.0, depth - neighbourDepth);
     }
 
     return sum / float(4);
+}
+
+subroutine float GetShadingFactor(ivec2 position, ivec2 windowSize);
+subroutine uniform GetShadingFactor GetShadingFactorUniform;
+
+subroutine ( GetShadingFactor )
+float getIdentityFactor(ivec2 position, ivec2 windowSize) {
+    return 1.0f;
+}
+
+subroutine ( GetShadingFactor )
+float getEDLFactor(ivec2 position, ivec2 windowSize) {
+    return exp(-response(position, windowSize) * edlStrength);
+}
+
+vec4 getColor(uint pixelIndex) {
+	uint64_t rg = _colorBuffer01[pixelIndex];
+	uint64_t ba = _colorBuffer02[pixelIndex];
+
+	uint a = uint(ba);
+	uint r = uint((rg >> 32) / a);
+	uint g = uint(rg) / a;
+	uint b = uint((ba >> 32) / a);
+
+	return vec4(vec3(r, g, b) / 255.0f, clamp(float(a), .0f, 1.0f));
 }
 
 uniform layout(rgba8) restrict image2D colorOutput;
 
 layout(local_size_variable) in;
 void main() {
-    const uint pixelIndex = gl_GlobalInvocationID.x;
+	const uint pixelIndex = gl_GlobalInvocationID.x;
     const ivec2 imgSize = imageSize(colorOutput);
     const uint totalPixels = imgSize.x * imgSize.y;
-    if (pixelIndex < totalPixels && uint(_depth[pixelIndex] >> 32) != ~0) { //
-        const uint py = uint(floor(pixelIndex / imgSize.x));
-        const uint px = pixelIndex % imgSize.x;
-        const ivec2 position = ivec2(px, py);
-
-        vec3 color = imageLoad(colorOutput, position).rgb; //vec3(linearize(uint(_depth[pixelIndex]>>32)));
-        float shading = exp(-response(position, imgSize) * edlStrength);
-
-        imageStore(colorOutput, position, vec4(vec3(color * shading), 1.0f));
+	
+    if (pixelIndex < totalPixels) {
+        ivec2 pixelCoords;
+        pixelCoords.y = int(floor(pixelIndex / imgSize.x));
+        pixelCoords.x = int(pixelIndex % imgSize.x);
+		
+		vec4 color = getColor(pixelIndex);
+		if (color.a < EPSILON) {
+            vec4 finalColor = vec4(0, 0, 0, 0);
+            const int neightbourSize = 0;
+			
+            for (int x = max(pixelCoords.x - neightbourSize, 0); x <= min(pixelCoords.x + neightbourSize, imgSize.x - 1); x++) {
+                for (int y = max(pixelCoords.y - neightbourSize, 0); y <= min(pixelCoords.y + neightbourSize, imgSize.y - 1); y++) {
+                    uint pixelId = y * imgSize.x + x;
+                    vec4 color = getColor(pixelId);
+					
+                    if (pixelId != pixelIndex && color.a > EPSILON) {
+                        finalColor.xyz += color.rgb;
+                        finalColor.a += 1;
+                    }
+                }
+            }
+			
+            if (finalColor.a > EPSILON) {
+                color = finalColor / finalColor.a * GetShadingFactorUniform(pixelCoords, imgSize);
+				imageStore(colorOutput, pixelCoords, color);
+			}
+        }
+		else
+		{
+			color = vec4(color.rgb * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f);
+			imageStore(colorOutput, pixelCoords, color);
+		}
+			
+		
     }
 }

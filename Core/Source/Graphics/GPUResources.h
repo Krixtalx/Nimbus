@@ -133,6 +133,8 @@ namespace Nimbus {
 			PositionLastFrame,
 			Attribute,
 			AttributeLastFrame,
+			RedGreen,
+			BlueAlpha,
 			Total
 		};
 		enum class SSBOSlots : uint8_t {
@@ -147,6 +149,8 @@ namespace Nimbus {
 		    PositionFrame2,
 			AttributeFrame1,
 			AttributeFrame2,
+			RedGreen,
+			BlueAlpha,
 			Total
 		};
 

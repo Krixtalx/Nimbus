@@ -33,6 +33,7 @@ namespace Nimbus {
 		ComputeShader* _computeDepthBufferShader;
 		//ComputeShader* _copyDepthBufferShader;
 		ComputeShader* _composeImageShader;
+		ComputeShader* _occlusionShader;
 		ComputeShader* _EDLShader;
 		GPUResources _GPUResources;
 

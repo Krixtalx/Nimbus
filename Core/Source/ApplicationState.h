@@ -28,6 +28,7 @@ namespace Nimbus {
 		float							_edlStrength = 300;
 		unsigned						_renderedPoints[3];
 		i32								_pointsBucket = 25000000;
+		float							_distanceThreshold = 1.01f;
 
 		int								_selectedMeshlet;
 

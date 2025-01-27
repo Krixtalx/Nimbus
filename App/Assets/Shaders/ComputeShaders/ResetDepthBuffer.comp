@@ -1,4 +1,4 @@
-#version 450
+#version 460
 
 #extension GL_ARB_compute_variable_group_size: enable
 #extension GL_ARB_gpu_shader_int64: require
@@ -6,7 +6,15 @@
 layout (local_size_variable) in;
 
 layout(std430, binding = 0) restrict buffer depthBuffer {
-	uint64_t _depth[]; //Los 32 bits más significativos son para la profundidad, los 32 restantes para el id del punto.
+	uint _depth[]; 
+};
+
+layout (std430, binding = 11) buffer color01Buffer	{ 
+	uint64_t _colorBuffer01[]; 
+};
+
+layout (std430, binding = 12) buffer color02Buffer	{ 
+	uint64_t _colorBuffer02[];
 };
 
 uniform vec3 backgroundColor;
@@ -22,8 +30,8 @@ void main()
     pixelCoords.y = uint(floor(index / imgSize.x));
     pixelCoords.x = index % imgSize.x;
 
-	// Maximum value of 64 bits
 	_depth[index] = 0;
 	_depth[index] = ~_depth[index];
+	_colorBuffer01[index] = _colorBuffer02[index] = 0;
     imageStore(colorOutput, ivec2(pixelCoords), vec4(backgroundColor,1));
 }

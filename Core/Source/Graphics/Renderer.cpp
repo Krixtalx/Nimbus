@@ -66,7 +66,8 @@ Nimbus::Renderer::Renderer() : _appState(nullptr), _activeScene(0),
                                _resetDepthBuffer(nullptr), _meshletCullingShader(nullptr),
                                _compactPositionsBuffer(nullptr),
                                _copyPositionsShader(nullptr),
-                               _computeDepthBufferShader(nullptr), _composeImageShader(nullptr), _EDLShader(nullptr),
+                               _computeDepthBufferShader(nullptr), _composeImageShader(nullptr),
+                               _occlusionShader (nullptr), _EDLShader(nullptr),
                                _newPointsBufferSize(0), _pointsPerSubBuffer(0),
                                _numBuffers(0),
                                _currentBufferId(0),
@@ -91,6 +92,7 @@ void Nimbus::Renderer::loadComputeShaders() {
 	_computeDepthBufferShader = ShaderManager::getInstance()->getComputeShader("ComputeDepthBuffer");
 	//_copyDepthBufferShader = ShaderManager::getInstance()->getComputeShader("CopyDepthBuffer");
 	_composeImageShader = ShaderManager::getInstance()->getComputeShader("ComposeImage");
+	_occlusionShader = ShaderManager::getInstance()->getComputeShader("OcclusionCheck");
 	_EDLShader = ShaderManager::getInstance()->getComputeShader("EDL");
 	_resetDepthBuffer = ShaderManager::getInstance()->getComputeShader("ResetDepthBuffer");
 	_shadersLoaded = true;
@@ -127,7 +129,7 @@ void Nimbus::Renderer::resizeEvent(const u16 width, const u16 height) {
 	_appState->_viewportSize = ivec2(width, height);
 	_scenes[_activeScene]->getActiveCamera()->setRaspect(width, height);
 	_renderFBO->modifySize(width, height);
-	_GPUResources.reserveGPUMemory<uint64_t>(GPUResources::SSBOSlots::DepthBuffer, _appState->_viewportSize.x * _appState->_viewportSize.y);
+	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::DepthBuffer, _appState->_viewportSize.x * _appState->_viewportSize.y);
 }
 
 void Nimbus::Renderer::screenshotEvent() {
@@ -158,11 +160,11 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	ComputeShader::initializeStaticVariables();
 
 	// - Establecemos un gris medio como color con el que se borrar� el frame buffer.
-	// No tiene por qu� ejecutarse en cada paso por el ciclo de eventos.
+	// No tiene por qué ejecutarse en cada paso por el ciclo de eventos.
 	glClearColor(_appState->_backgroundColor.x, _appState->_backgroundColor.y, _appState->_backgroundColor.z, 1.0f);
 
 	// - Le decimos a OpenGL que tenga en cuenta la profundidad a la hora de dibujar.
-	// No tiene por qu� ejecutarse en cada paso por el ciclo de eventos.
+	// No tiene por qué ejecutarse en cada paso por el ciclo de eventos.
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_STENCIL_TEST);
@@ -204,16 +206,16 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	_numBuffers = 2;
 	_prevBufferId = 0;
 	_currentBufferId = 1;
-	_GPUResources.reserveGPUMemory<uint64_t>(GPUResources::SSBOSlots::DepthBuffer, static_cast<size_t>(_appState->_viewportSize.x) * _appState->_viewportSize.y, 0);
+	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::DepthBuffer, static_cast<size_t>(_appState->_viewportSize.x) * _appState->_viewportSize.y, 0);
 	_GPUResources.reserveGPUMappedMemory<u32>(GPUResources::SSBOSlots::ReadBackData, 1, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
 	_GPUResources.reserveGPUMemory<vec3>(GPUResources::SSBOSlots::PositionFrame1, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMemory<vec3>(GPUResources::SSBOSlots::PositionFrame2, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame1, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame2, _pointsPerSubBuffer, 0);
-	_GPUResources.reserveGPUMappedMemory<PointWithOffset>(GPUResources::SSBOSlots::UploadBuffer, _newPointsBufferSize * _numBuffers, GL_MAP_WRITE_BIT);
+	_GPUResources.reserveGPUMemory<u64>(GPUResources::SSBOSlots::RedGreen, static_cast<size_t>(width) * static_cast<size_t>(height), 0);
+	_GPUResources.reserveGPUMemory<u64>(GPUResources::SSBOSlots::BlueAlpha, static_cast<size_t>(width) * static_cast<size_t>(height), 0);
+	_GPUResources.reserveGPUMappedMemory<PointWithOffset>(GPUResources::SSBOSlots::UploadBuffer, static_cast<size_t>(_newPointsBufferSize) * _numBuffers, GL_MAP_WRITE_BIT);
 }
-
-
 
 u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& currentIndex, u32& pointsToSend) {
 	auto& pcGPUResources = pc->_GPUResources;
@@ -448,8 +450,11 @@ void Nimbus::Renderer::render() {
 			const i32 numGroups = ComputeShader::getNumGroups(_appState->_viewportSize.x * _appState->_viewportSize.y);
 			const i32 numWorkGroups = ComputeShader::getWorkGroupSize(numGroups, _appState->_viewportSize.x * _appState->_viewportSize.y);
 			_GPUResources.bindBuffer(GPUResources::SSBOSlots::DepthBuffer, GPUResources::GPUBinding::DepthBuffer);
-			_resetDepthBuffer->setUniform("windowSize", _appState->_viewportSize);
+			_GPUResources.bindBuffer(GPUResources::SSBOSlots::RedGreen, GPUResources::GPUBinding::RedGreen);
+			_GPUResources.bindBuffer(GPUResources::SSBOSlots::BlueAlpha, GPUResources::GPUBinding::BlueAlpha);
 			_resetDepthBuffer->setUniform("backgroundColor", _appState->_backgroundColor);
+			_resetDepthBuffer->setUniform("windowSize", _appState->_viewportSize);
+			_resetDepthBuffer->setUniform("colorOutput", 0);
 			_resetDepthBuffer->execute(numGroups, numWorkGroups);
 			const GLsync resetDepthBufferFence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
@@ -534,36 +539,52 @@ void Nimbus::Renderer::render() {
 						_computeDepthBufferShader->execute(xNumGroups, xNumWorkGroups);
 						glPopDebugGroup();
 
-						xNumGroups = ComputeShader::getNumGroups(_appState->_viewportSize.x * _appState->_viewportSize.y);
-						xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, _appState->_viewportSize.x * _appState->_viewportSize.y);
-						_composeImageShader->setUniform("colorOutput", 0);
-						vec3 first, second, last;
 						/*ImGradient& gradient = _appState->_fusionGradient[PointCloud::_renderAttributes[(u8)cloud->_attToUse]];
 						gradient.getColorAt(0, &first[0]);
 						gradient.getColorAt(0.5f, &second[0]);
 						gradient.getColorAt(1.f, &last[0]);*/
+
+						vec3 first, second, last;
 						_composeImageShader->setUniform("firstGradientPoint", first);
 						_composeImageShader->setUniform("secondGradientPoint", second);
 						_composeImageShader->setUniform("lastGradientPoint", last);
-						_composeImageShader->setUniform("cameraFoV", getCamera()->getFoV());
+						_composeImageShader->setUniform("distanceThreshold", _appState->_distanceThreshold);
+						_composeImageShader->setUniform("numPoints", numPoints);
+						_composeImageShader->setUniform("pointsOffset", offset);
+						_composeImageShader->setUniform("mModelViewProj", mvpMatrix);
+						_composeImageShader->setUniform("windowSize", _appState->_viewportSize);
 						if (cloud->_attToUse == Attribute::RGB)
 							_composeImageShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorUnpackingUint");
 						else
 							_composeImageShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorFromFloat");
 						_composeImageShader->applyActiveSubroutines();
-						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 13, "ComposeImage");
+						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 12, "ComposeImage");
 						_composeImageShader->execute(xNumGroups, xNumWorkGroups);
 						glPopDebugGroup();
 
-						if (_appState->_renderWithEDL) {
+						xNumGroups = ComputeShader::getNumGroups(_appState->_viewportSize.x * _appState->_viewportSize.y);
+						xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, _appState->_viewportSize.x * _appState->_viewportSize.y);
+
+						_occlusionShader->setUniform("cameraFoV", getCamera()->getFoV());
+						_occlusionShader->setUniform("windowSize", _appState->_viewportSize);
+						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, 9, "Occlusion");
+						_occlusionShader->execute(xNumGroups, xNumWorkGroups);
+						glPopDebugGroup();
+
+						_EDLShader->setUniform("colorOutput", 0);
+						if (_appState->_renderWithEDL)
+						{
 							_EDLShader->setUniform("zNear", _scenes[_activeScene]->getActiveCamera()->getZnear());
 							_EDLShader->setUniform("zFar", _scenes[_activeScene]->getActiveCamera()->getZfar());
 							_EDLShader->setUniform("edlStrength", _appState->_edlStrength);
-							_EDLShader->setUniform("colorOutput", 0);
-							glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 3, "EDL");
-							_EDLShader->execute(xNumGroups, xNumWorkGroups);
-							glPopDebugGroup();
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::EDL, "getEDLFactor");
 						}
+						else
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::EDL, "getIdentityFactor");
+						_EDLShader->applyActiveSubroutines();
+						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, 3, "EDL");
+						_EDLShader->execute(xNumGroups, xNumWorkGroups);
+						glPopDebugGroup();
 					}
 					offset += numPoints;
 				}

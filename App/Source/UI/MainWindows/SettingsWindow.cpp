@@ -124,6 +124,11 @@ void Nimbus::SettingsWindow::renderWindow() {
 				ImGui::TableNextColumn();
 				GuiUtilities::Checkbox(SETTINGS_GENERAL_SHOWMESHLETAABB, "meshletsAABBs", &appState->_renderMeshletsAABBs, true);
 
+				//HQS
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::DragFloat("HQS distance threshold", &appState->_distanceThreshold, 0.001f, 1.0f, 1.2f);
+
 				// Render with EDL
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
