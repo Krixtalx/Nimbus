@@ -129,7 +129,10 @@ void Nimbus::Renderer::resizeEvent(const u16 width, const u16 height) {
 	_appState->_viewportSize = ivec2(width, height);
 	_scenes[_activeScene]->getActiveCamera()->setRaspect(width, height);
 	_renderFBO->modifySize(width, height);
-	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::DepthBuffer, _appState->_viewportSize.x * _appState->_viewportSize.y);
+
+	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::DepthBuffer, static_cast<size_t>(_appState->_viewportSize.x) * _appState->_viewportSize.y);
+	_GPUResources.reserveGPUMemory<u64>(GPUResources::SSBOSlots::RedGreen, static_cast<size_t>(width) * static_cast<size_t>(height));
+	_GPUResources.reserveGPUMemory<u64>(GPUResources::SSBOSlots::BlueAlpha, static_cast<size_t>(width) * static_cast<size_t>(height));
 }
 
 void Nimbus::Renderer::screenshotEvent() {
