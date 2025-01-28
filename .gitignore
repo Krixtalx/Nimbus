@@ -51,6 +51,7 @@ vcpkg_installed/*
 *.bin
 *.mtl
 *.png
+!Images/*
 *.jpeg
 *.jpg
 *.txt
