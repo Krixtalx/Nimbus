@@ -1,7 +1,7 @@
 # Virtualized Point Cloud Rendering
 
 ![c++](https://img.shields.io/github/languages/top/Krixtalx/Nimbus) 
-![opengl](https://img.shields.io/badge/-OpenGL_4.6-yellow?logo=opengl)
+![opengl](https://img.shields.io/badge/-OpenGL_4.6-red?logo=opengl)
 
 ![License: CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/80x15.png)
 
@@ -32,18 +32,18 @@ Additionally, we propose another aggregation of points into meshlets (coined poi
 # Building
 
 - Clone the repository.
-- Go to `Project scripts` and execute a setup file depending on your operative system. We provide it for Windows O.S.
+- Go to `Project scripts` and execute the setup file for Windows O.S.
 - Compile the project with Visual Studio 2022 after opening `Nimbus.sln`.
-- We use [Vcpkg](https://github.com/microsoft/vcpkg) as a dependency manager. Make sure you have it installed and integrated into Visual Studio to automatically download and compile dependencies.
+- We use [vcpkg](https://github.com/microsoft/vcpkg) as a dependency manager. Make sure it is installed and integrated with Visual Studio to automatically download and compile dependencies.
 
 # How to cite
 
-     @article{Araque_2024,
+     @article{Collado_2024,
         title={Virtualized Point Cloud Rendering},
         url={http://dx.doi.org/10.36227/techrxiv.172254406.67063382/v1},
         DOI={10.36227/techrxiv.172254406.67063382/v1},
         publisher={Institute of Electrical and Electronics Engineers (IEEE)},
-        author={Araque, José Antonio Collado and López, Alfonso and Jurado, Juan M and Jiménez, J Roberto},
+        author={Collado Araque, José Antonio and López Ruiz, Alfonso and Jurado, Juan M. and Jiménez, J. Roberto},
         year={2024},
         month=aug 
     }
