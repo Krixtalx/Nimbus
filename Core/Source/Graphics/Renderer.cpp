@@ -536,34 +536,44 @@ void Nimbus::Renderer::render() {
 
 						xNumGroups = ComputeShader::getNumGroups(_appState->_viewportSize.x * _appState->_viewportSize.y);
 						xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, _appState->_viewportSize.x * _appState->_viewportSize.y);
-						_composeImageShader->setUniform("colorOutput", 0);
+
 						vec3 first, second, last;
 						/*ImGradient& gradient = _appState->_fusionGradient[PointCloud::_renderAttributes[(u8)cloud->_attToUse]];
 						gradient.getColorAt(0, &first[0]);
 						gradient.getColorAt(0.5f, &second[0]);
 						gradient.getColorAt(1.f, &last[0]);*/
-						_composeImageShader->setUniform("firstGradientPoint", first);
-						_composeImageShader->setUniform("secondGradientPoint", second);
-						_composeImageShader->setUniform("lastGradientPoint", last);
 						_composeImageShader->setUniform("cameraFoV", getCamera()->getFoV());
-						if (cloud->_attToUse == Attribute::RGB)
-							_composeImageShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorUnpackingUint");
-						else
-							_composeImageShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorFromFloat");
-						_composeImageShader->applyActiveSubroutines();
+						_composeImageShader->setUniform("windowSize", _appState->_viewportSize);
 						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 13, "ComposeImage");
 						_composeImageShader->execute(xNumGroups, xNumWorkGroups);
 						glPopDebugGroup();
 
-						if (_appState->_renderWithEDL) {
+						_EDLShader->setUniform("colorOutput", 0);
+
+						if (cloud->_attToUse == Attribute::RGB)
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorUnpackingUint");
+						else
+						{
+							_EDLShader->setUniform("firstGradientPoint", first);
+							_EDLShader->setUniform("secondGradientPoint", second);
+							_EDLShader->setUniform("lastGradientPoint", last);
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorFromFloat");
+						}
+
+						if (_appState->_renderWithEDL)
+						{
 							_EDLShader->setUniform("zNear", _scenes[_activeScene]->getActiveCamera()->getZnear());
 							_EDLShader->setUniform("zFar", _scenes[_activeScene]->getActiveCamera()->getZfar());
 							_EDLShader->setUniform("edlStrength", _appState->_edlStrength);
-							_EDLShader->setUniform("colorOutput", 0);
-							glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 3, "EDL");
-							_EDLShader->execute(xNumGroups, xNumWorkGroups);
-							glPopDebugGroup();
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::EDL, "getEDLFactor");
 						}
+						else
+							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::EDL, "getIdentityFactor");
+
+						_EDLShader->applyActiveSubroutines();
+						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, 3, "EDL");
+						_EDLShader->execute(xNumGroups, xNumWorkGroups);
+						glPopDebugGroup();
 					}
 					offset += numPoints;
 				}
