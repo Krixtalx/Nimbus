@@ -543,12 +543,14 @@ void Nimbus::Renderer::render() {
 						gradient.getColorAt(0.5f, &second[0]);
 						gradient.getColorAt(1.f, &last[0]);*/
 						_composeImageShader->setUniform("cameraFoV", getCamera()->getFoV());
+						_composeImageShader->setUniform("occlusionThreshold", _appState->_occlusionThreshold);
 						_composeImageShader->setUniform("windowSize", _appState->_viewportSize);
 						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, 13, "ComposeImage");
 						_composeImageShader->execute(xNumGroups, xNumWorkGroups);
 						glPopDebugGroup();
 
 						_EDLShader->setUniform("colorOutput", 0);
+						_EDLShader->setUniform("numNeighbors", _appState->_numNeighbors);
 
 						if (cloud->_attToUse == Attribute::RGB)
 							_EDLShader->setSubroutineUniform(ShaderEnum::COMPUTE_SHADER, ShaderEnum::GET_COLOR, "getColorUnpackingUint");

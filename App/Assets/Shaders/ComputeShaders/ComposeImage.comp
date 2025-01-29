@@ -8,6 +8,7 @@ layout(std430, binding = 0) buffer depthBuffer {
 };
 
 uniform float cameraFoV;
+uniform float occlusionThreshold;
 uniform uvec2 windowSize;
 
 uint linearizePosition(ivec2 windowPosition)
@@ -54,7 +55,7 @@ void main() {
 			uint uDepth = uint(_depth[pixelIndex] >> 32);
 			float depth = uintBitsToFloat(uDepth);
 			
-			if (getOcclusionAngle(pixelCoords, ivec2(windowSize), depth) < 0.1) 
+			if (getOcclusionAngle(pixelCoords, ivec2(windowSize), depth) < occlusionThreshold) 
 				_depth[pixelIndex] = _depth[pixelIndex] | uint64_t(~uint(0));
 		}
     }

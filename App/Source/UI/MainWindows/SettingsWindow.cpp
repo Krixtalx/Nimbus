@@ -112,7 +112,17 @@ void Nimbus::SettingsWindow::renderWindow() {
 				//Points bucket
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
-				ImGui::SliderInt("Points bucket", &appState->_pointsBucket, 1000000, 90000000);
+				ImGui::SliderInt("Points bucket", &appState->_pointsBucket, 1000000, 180000000);
+
+				//Hole filling
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::SliderInt("Hole filling radius", &appState->_numNeighbors, 0, 5);
+
+				//Occlusion threshold
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::DragFloat("Threshold of occlusion angle", &appState->_occlusionThreshold, 0.01f, .0f, 0.3f);
 
 				// Draw grid
 				ImGui::TableNextRow();

@@ -14,6 +14,7 @@ uniform vec3 secondGradientPoint;
 uniform vec3 lastGradientPoint;
 uniform float zNear, zFar;
 uniform float edlStrength;
+uniform int numNeighbors;
 
 ivec2 edlNeighbourhood[4] = { ivec2(1, 0), ivec2(-1, 0), ivec2(0, 1), ivec2(0, -1) };
 
@@ -107,19 +108,22 @@ void main() {
     const ivec2 imgSize = imageSize(colorOutput);
     const uint totalPixels = imgSize.x * imgSize.y;
 	
-    if (pixelIndex < totalPixels && uint(_depth[pixelIndex] >> 32) != ~0) { //
+    if (pixelIndex < totalPixels) { //
         const uint py = uint(floor(pixelIndex / imgSize.x));
         const uint px = pixelIndex % imgSize.x;
         const ivec2 pixelCoords = ivec2(px, py);
         uint codedColor = uint(_depth[pixelIndex]);
 
 		//
-		if (codedColor == ~uint(0)) {
+		if (uint(_depth[pixelIndex] >> 32) != NULL && codedColor != NULL) {
+			vec4 color = vec4(GetColorUniform(codedColor), 1);
+			imageStore(colorOutput, pixelCoords, vec4(GetColorUniform(codedColor) * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
+		}
+		else {
             vec4 finalColor = vec4(0, 0, 0, 0);
-            const int neightbourSize = 1;
 			
-            for (int x = max(pixelCoords.x - neightbourSize, 0); x <= min(pixelCoords.x + neightbourSize, imgSize.x - 1); x++) {
-                for (int y = max(pixelCoords.y - neightbourSize, 0); y <= min(pixelCoords.y + neightbourSize, imgSize.y - 1); y++) {
+            for (int x = max(pixelCoords.x - numNeighbors, 0); x <= min(pixelCoords.x + numNeighbors, imgSize.x - 1); x++) {
+                for (int y = max(pixelCoords.y - numNeighbors, 0); y <= min(pixelCoords.y + numNeighbors, imgSize.y - 1); y++) {
                     uint pixelId = y * imgSize.x + x;
                     codedColor = uint(_depth[pixelId]);
                     if (pixelId != pixelIndex && codedColor != NULL) {
@@ -133,9 +137,5 @@ void main() {
                 imageStore(colorOutput, pixelCoords, vec4(finalColor.rgb * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
             }
         }
-		else {
-			vec4 color = vec4(GetColorUniform(codedColor), 1);
-			imageStore(colorOutput, pixelCoords, vec4(GetColorUniform(codedColor) * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
-		}
     }
 }
