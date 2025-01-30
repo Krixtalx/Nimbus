@@ -7,7 +7,7 @@
 
 # About
 
-This repository contains the source code for the paper 'Virtualized Point Cloud Rendering', currently submitted to IEEE Transactions on Graphics and Visualization. Our paper is inspired by previous works of the TU Wien research group. We move the rasterization pipeline from OpenGL's vertex and fragment shaders to compute shaders. However, one of the remaining drawbacks of this approach is that the point cloud must entirely fit in the GPU VRAM. While some computers out there have a large VRAM capacity, commodity hardware typically oscillates between 6 and 8GB. 
+This repository contains the source code for the paper 'Virtualized Point Cloud Rendering', currently submitted to IEEE Transactions on Graphics and Visualization. Our paper is inspired by previous works of the TU Wien research group. We move the rasterization pipeline from OpenGL's vertex and fragment shaders to compute shaders. However, one of the remaining drawbacks of this approach is that the point cloud must entirely fit in the GPU VRAM. While some computers out there have a large VRAM capacity, commodity hardware typically oscillates between 6 and 12GB. 
 
 We propose that point cloud data can be transferred from disk to CPU and GPU as required. Therefore, we avoid having all the data in VRAM in what we call a virtualized point cloud rendering. Points are transferred on demand, and we can even simulate that our computer has a lower VRAM than it has.
 
