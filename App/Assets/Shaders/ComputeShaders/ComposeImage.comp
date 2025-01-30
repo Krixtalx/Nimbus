@@ -3,63 +3,17 @@
 #extension GL_NV_shader_atomic_int64: require
 #extension GL_ARB_compute_variable_group_size: enable
 
-layout(std430, binding = 0) restrict readonly buffer depthBuffer {
+layout(std430, binding = 0) buffer depthBuffer {
     uint64_t _depth[]; //Los 32 bits más significativos son para la profundidad, los 32 restantes para el atributo del punto.
 };
 
-#define NULL_BACKGROUND 0xFFFFFFFF
-
-uniform vec3 firstGradientPoint;
-uniform vec3 secondGradientPoint;
-uniform vec3 lastGradientPoint;
 uniform float cameraFoV;
+uniform float occlusionThreshold;
+uniform uvec2 windowSize;
 
-subroutine vec3 GetColor(uint codedColor);
-subroutine uniform GetColor GetColorUniform;
-
-subroutine ( GetColor )
-vec3 getColorUnpackingUint(uint codedColor) {
-    return vec4(unpackUnorm4x8(codedColor)).xyz;
-}
-
-subroutine ( GetColor )
-vec3 getColorFromFloat(uint codedColor) {
-    float val = uintBitsToFloat(codedColor);
-    vec3 color;
-    if (val < 0.5f)
-        color = mix(firstGradientPoint, secondGradientPoint, val*2f);
-    else
-        color = mix(secondGradientPoint, lastGradientPoint, (val - 0.5f)*2f);
-    return color;
-}
-
-uint getPixelId(ivec2 pixelCoords, ivec2 imgSize) {
-	return pixelCoords.y * imgSize.x + pixelCoords.x;
-}
-
-bool fillBackground(ivec2 pixelCoords, ivec2 imgSize) {
-	ivec2 minCoords = max(pixelCoords - ivec2(1), ivec2(0)), maxCoords = min(pixelCoords + ivec2(1), imgSize - ivec2(1));
-	uint8_t 
-		lt = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		lm = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, pixelCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		lb = uint8_t(uint(_depth[getPixelId(ivec2(minCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		mt = uint8_t(uint(_depth[getPixelId(ivec2(pixelCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		mb = uint8_t(uint(_depth[getPixelId(ivec2(pixelCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		rt = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, maxCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		rm = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, pixelCoords.y), imgSize)]) != NULL_BACKGROUND), 
-		rb = uint8_t(uint(_depth[getPixelId(ivec2(maxCoords.x, minCoords.y), imgSize)]) != NULL_BACKGROUND);
-	
-	uint8_t sum = lt + lm + lb + mt + mb + rt + rm + rb;
-	uint8_t m0 = mt + rt + rm + rb + mb;
-	uint8_t m1 = lt + mt + rt + lm + rm;
-	uint8_t m2 = lt + mt + lm + lb + mb;
-	uint8_t m3 = lm + rm + lb + mb + rb;
-	uint8_t m4 = lt + mt + rt + rm + rb;
-	uint8_t m5 = lt + mt + rt + lm + lb;
-	uint8_t m6 = lt + lm + lb + mb + rb;
-	uint8_t m7 = rt + rm + rb + mb + lb;
-	
-	return sum == uint8_t(8) || (m0 * m1 * m2 * m3 * m4 * m5 * m6 * m7) != uint8_t(0);
+uint linearizePosition(ivec2 windowPosition)
+{
+    return windowPosition.y * windowSize.x + windowPosition.x;
 }
 
 float getOcclusionAngle(ivec2 pixelCoords, ivec2 imgSize, float depth)
@@ -73,11 +27,11 @@ float getOcclusionAngle(ivec2 pixelCoords, ivec2 imgSize, float depth)
 			if (x == pixelCoords.x && y == pixelCoords.y) 
 				continue;
 
-			uint tempDepthNeighbor = uint(_depth[getPixelId(ivec2(x, y), imgSize)] >> 32);
+			uint tempDepthNeighbor = uint(_depth[linearizePosition(ivec2(x, y))] >> 32);
 			if (tempDepthNeighbor == ~uint(0)) 
 				continue;
 
-			float depthNeighbour = uintBitsToFloat(uint(_depth[getPixelId(ivec2(x, y), imgSize)] >> 32));
+			float depthNeighbour = uintBitsToFloat(uint(_depth[linearizePosition(ivec2(x, y))] >> 32));
 			float widthPixel = 2.0f * max(depth, depthNeighbour) * tan(cameraFoV / float(imgSize.x));
 			minAngle = min(abs(atan(widthPixel, depth - depthNeighbour)), minAngle);
 		}
@@ -86,47 +40,23 @@ float getOcclusionAngle(ivec2 pixelCoords, ivec2 imgSize, float depth)
 	return minAngle;
 }
 
-uniform layout(rgba8) writeonly image2D colorOutput;
-
 layout(local_size_variable) in;
 void main() {
     const uint pixelIndex = gl_GlobalInvocationID.x;
-    const ivec2 imgSize = imageSize(colorOutput);
-    const uint totalPixels = imgSize.x * imgSize.y;
+    const uint totalPixels = windowSize.x * windowSize.y;
+	
     if (pixelIndex < totalPixels) {
         ivec2 pixelCoords;
-        pixelCoords.y = int(floor(pixelIndex / imgSize.x));
-        pixelCoords.x = int(pixelIndex % imgSize.x);
+        pixelCoords.y = int(floor(pixelIndex / windowSize.x));
+        pixelCoords.x = int(pixelIndex % windowSize.x);
         uint codedColor = uint(_depth[pixelIndex]);
-        if (codedColor != NULL_BACKGROUND) {
-			float depth = uintBitsToFloat(uint(_depth[pixelIndex] >> 32));
-			if (getOcclusionAngle(pixelCoords, imgSize, depth) >= 0.1) {
-				vec4 color = vec4(GetColorUniform(codedColor), 1);
-				imageStore(colorOutput, pixelCoords, color);
-			}
-			else
-				codedColor = NULL_BACKGROUND;
+		
+        if (codedColor != ~uint(0)) {
+			uint uDepth = uint(_depth[pixelIndex] >> 32);
+			float depth = uintBitsToFloat(uDepth);
+			
+			if (getOcclusionAngle(pixelCoords, ivec2(windowSize), depth) < occlusionThreshold) 
+				_depth[pixelIndex] = _depth[pixelIndex] | uint64_t(~uint(0));
 		}
-        
-		if (codedColor == NULL_BACKGROUND) {
-            vec4 finalColor = vec4(0, 0, 0, 0);
-            const int neightbourSize = 1;
-            for (int x = max(pixelCoords.x - neightbourSize, 0); x <= min(pixelCoords.x + neightbourSize, imgSize.x - 1); x++) {
-                for (int y = max(pixelCoords.y - neightbourSize, 0); y <= min(pixelCoords.y + neightbourSize, imgSize.y - 1); y++) {
-                    uint pixelId = y * imgSize.x + x;
-                    codedColor = uint(_depth[pixelId]);
-                    if (pixelId != pixelIndex && codedColor != NULL_BACKGROUND) {
-                        finalColor.xyz += GetColorUniform(codedColor);
-                        finalColor.a += 1;
-                    }
-                }
-            }
-            if (finalColor.a > 0) {
-                finalColor.xyz /= finalColor.a;
-                //finalColor.xyz = vec3(1,0,0);
-                finalColor.a = 1;
-                imageStore(colorOutput, pixelCoords, finalColor);
-            }
-        }
     }
 }

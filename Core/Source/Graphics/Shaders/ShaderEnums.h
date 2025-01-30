@@ -32,6 +32,7 @@ namespace Nimbus {
 
 		enum ComputeSubroutines : uint8_t {
 			GET_COLOR,
+			EDL,
 			NUM_COMPUTE_SUBROUTINES
 		};
 
@@ -56,7 +57,8 @@ namespace Nimbus {
 			"NormalMapping"},
 
 			//Compute Shader
-			{"GetColor"}
+			{"GetColor",
+			"GetShadingFactor" }
 		};
 
 		inline static std::vector<std::vector<std::string>> SubroutineUniformNames[ShaderTypes::NUM_SHADER_TYPES] //[ShaderType][Subroutine][SubroutineUniform]
