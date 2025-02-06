@@ -28,21 +28,6 @@ uint linearizePosition(ivec2 windowPosition, ivec2 windowSize)
     return windowPosition.y * windowSize.x + windowPosition.x;
 }
 
-float response(ivec2 position, ivec2 windowSize)
-{
-    float depth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(position, windowSize)] >> 32))));
-    float sum = 0.0;
-
-    for (int i = 0; i < 4; i++)
-    {
-        ivec2 samplePosition = clamp(position + edlNeighbourhood[i].xy, ivec2(0), windowSize - ivec2(1));
-        float neighbourDepth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(samplePosition, windowSize)] >> 32))));
-        sum += max(0.0, depth - neighbourDepth);
-    }
-
-    return sum / float(4);
-}
-
 subroutine float GetShadingFactor(ivec2 position, ivec2 windowSize);
 subroutine uniform GetShadingFactor GetShadingFactorUniform;
 
@@ -53,7 +38,22 @@ float getIdentityFactor(ivec2 position, ivec2 windowSize) {
 
 subroutine ( GetShadingFactor )
 float getEDLFactor(ivec2 position, ivec2 windowSize) {
-    return exp(-response(position, windowSize) * edlStrength);
+    float depth = log2(linearize(uintBitsToFloat(uint(_depth[linearizePosition(position, windowSize)] >> 32))));
+    float sum = 0.0;
+
+    for (int i = 0; i < 4; i++)
+    {
+		ivec2 samplePosition = clamp(position + edlNeighbourhood[i].xy, ivec2(0), windowSize - ivec2(1));
+		uint unsignedNeighborDepth = uint(_depth[linearizePosition(samplePosition, windowSize)] >> 32);
+		
+		if (unsignedNeighborDepth != NULL)
+		{
+			float neighbourDepth = log2(linearize(uintBitsToFloat(unsignedNeighborDepth)));
+			sum += max(0.0, depth - neighbourDepth);  
+		}	
+    }
+
+    return exp(-sum / float(4) * edlStrength);
 }
 
 subroutine vec3 GetColor(uint codedColor);
@@ -115,7 +115,7 @@ void main() {
         uint codedColor = uint(_depth[pixelIndex]);
 
 		//
-		if (uint(_depth[pixelIndex] >> 32) != NULL && codedColor != NULL) {
+		if (uint(_depth[pixelIndex] >> 32) != NULL) {
 			vec4 color = vec4(GetColorUniform(codedColor), 1);
 			imageStore(colorOutput, pixelCoords, vec4(GetColorUniform(codedColor) * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
 		}
@@ -134,8 +134,9 @@ void main() {
             }
             if (finalColor.a > 0) {
                 finalColor /= finalColor.a;
-                imageStore(colorOutput, pixelCoords, vec4(finalColor.rgb * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
-            }
+				
+				imageStore(colorOutput, pixelCoords, vec4(finalColor.rgb * GetShadingFactorUniform(pixelCoords, imgSize), 1.0f));
+            }		
         }
     }
 }

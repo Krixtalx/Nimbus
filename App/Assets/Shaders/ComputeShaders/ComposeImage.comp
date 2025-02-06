@@ -56,7 +56,7 @@ void main() {
 			float depth = uintBitsToFloat(uDepth);
 			
 			if (getOcclusionAngle(pixelCoords, ivec2(windowSize), depth) < occlusionThreshold) 
-				_depth[pixelIndex] = _depth[pixelIndex] | uint64_t(~uint(0));
+				_depth[pixelIndex] = ~uint64_t(0);
 		}
     }
 }

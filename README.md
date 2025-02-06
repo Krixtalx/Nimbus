@@ -12,7 +12,7 @@ This repository contains the source code for the paper 'Virtualized Point Cloud 
 We propose that point cloud data can be transferred from disk to CPU and GPU as required. Therefore, we avoid having all the data in VRAM in what we call a virtualized point cloud rendering. Points are transferred on demand, and we can even simulate that our computer has a lower VRAM than it has.
 
 <p align="center">
-    <img src="Images/Alhambra.png"/>
+    <img src="Images/Nimbus.gif"/>
 </p>
 
 # Features
