@@ -36,6 +36,9 @@ Additionally, we propose another aggregation of points into meshlets (coined poi
 - Compile the project with Visual Studio 2022 after opening `Nimbus.sln`.
 - We use [vcpkg](https://github.com/microsoft/vcpkg) as a dependency manager. Make sure it is installed and integrated with Visual Studio to automatically download and compile dependencies.
 
+> [!CAUTION]
+> This repository was tested only over Windows O.S.
+
 # How to cite
 
      @article{Collado_2024,
