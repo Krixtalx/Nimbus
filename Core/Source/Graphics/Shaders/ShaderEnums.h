@@ -58,7 +58,8 @@ namespace Nimbus {
 
 			//Compute Shader
 			{"GetColor",
-			"GetShadingFactor" }
+			"GetShadingFactor",
+			   "GetAttribute" }
 		};
 
 		inline static std::vector<std::vector<std::string>> SubroutineUniformNames[ShaderTypes::NUM_SHADER_TYPES] //[ShaderType][Subroutine][SubroutineUniform]

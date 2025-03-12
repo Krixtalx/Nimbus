@@ -211,9 +211,9 @@ void Nimbus::Renderer::prepareOpenGL(u16 width, u16 height, ApplicationState* ap
 	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame1, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMemory<u32>(GPUResources::SSBOSlots::AttributeFrame2, _pointsPerSubBuffer, 0);
 	_GPUResources.reserveGPUMappedMemory<PointWithOffset>(GPUResources::SSBOSlots::UploadBuffer, _newPointsBufferSize * _numBuffers, GL_MAP_WRITE_BIT);
+	_GPUResources.reserveGPUMappedMemory<u32>(GPUResources::SSBOSlots::PointletIndices, _pointsPerSubBuffer, GL_MAP_WRITE_BIT);
+	_GPUResources.reserveGPUMappedMemory<float>(GPUResources::SSBOSlots::PointletLoad, _pointsPerSubBuffer, GL_MAP_WRITE_BIT);
 }
-
-
 
 u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& currentIndex, u32& pointsToSend) {
 	auto& pcGPUResources = pc->_GPUResources;
@@ -268,11 +268,29 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 			pc->_lastFrameCulling[i] = std::min(requiredPoints, loadedPointsInGPU);
 		}
 
+		double meshletLoad = static_cast<double>(pc->_lastFrameCulling[i]) / pc->_meshletSize;
+		for (u32 idx = currentIndex; idx < currentIndex + pc->_lastFrameCulling[i]; ++idx)
+		{
+			if (idx < pc->_pointletIndex.size())
+				pc->_pointletIndex[idx] = i;
+			else
+				pc->_pointletIndex.push_back(i);
+
+			if (idx < pc->_pointletLoad.size())
+				pc->_pointletLoad[idx] = meshletLoad;
+			else
+				pc->_pointletLoad.push_back(meshletLoad);
+		}
+
 		pc->_numVisiblePoints += pc->_lastFrameCulling[i];
 		currentIndex += pc->_lastFrameCulling[i];
 		prevIndex += loadedPointsInGPU;
 	}
+
 	if (!compactInfoForGPU.empty()) {
+		_GPUResources.writeGPUMappedData(GPUResources::SSBOSlots::PointletIndices, pc->_pointletIndex.data(), pc->_numVisiblePoints);
+		_GPUResources.writeGPUMappedData(GPUResources::SSBOSlots::PointletLoad, pc->_pointletLoad.data(), pc->_numVisiblePoints);
+
 		//fmt::print("{} meshlets copied\n", compactInfoForGPU.size());
 		pc->_numCompactInfo = compactInfoForGPU.size();
 		pcGPUResources.writeGPUMappedData(GPUResources::SSBOSlots::CompactionInfo, compactInfoForGPU.data(), pc->_numCompactInfo);
@@ -527,10 +545,22 @@ void Nimbus::Renderer::render() {
 						                              GPUResources::GPUBinding::Attribute,
 													  0, _pointsPerSubBuffer * sizeof(u32));
 						_GPUResources.bindBuffer(GPUResources::SSBOSlots::DepthBuffer, GPUResources::GPUBinding::DepthBuffer);
+						if (_appState->_showMeshletIndex) {
+							_GPUResources.bindBuffer(GPUResources::SSBOSlots::PointletIndices, GPUResources::GPUBinding::PointletIndices);
+							_computeDepthBufferShader->setSubroutineUniform(Nimbus::ShaderEnum::COMPUTE_SHADER, 2, "getPointletColor");
+						}
+						else if (_appState->_showMeshletLoad) {
+							_GPUResources.bindBuffer(GPUResources::SSBOSlots::PointletLoad, GPUResources::GPUBinding::PointletLoad);
+							_computeDepthBufferShader->setSubroutineUniform(Nimbus::ShaderEnum::COMPUTE_SHADER, 2, "getPointletLoad");
+						}
+						else {
+							_computeDepthBufferShader->setSubroutineUniform(Nimbus::ShaderEnum::COMPUTE_SHADER, 2, "getAttribute");
+						}
 						i32 xNumGroups = ComputeShader::getNumGroups(numPoints);
 						i32 xNumWorkGroups = ComputeShader::getWorkGroupSize(xNumGroups, numPoints);
 						glWaitSync(resetDepthBufferFence, 0, GL_TIMEOUT_IGNORED);
 						glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, 13, "ComputeDepth");
+						_computeDepthBufferShader->applyActiveSubroutines();
 						_computeDepthBufferShader->execute(xNumGroups, xNumWorkGroups);
 						glPopDebugGroup();
 

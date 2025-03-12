@@ -86,6 +86,8 @@ namespace Nimbus {
 		GPUResources														_GPUResources;
 		std::vector<u16>													_currentFrameCulling;
 		std::vector<u16>													_lastFrameCulling;
+		std::vector<u32>													_pointletIndex;
+		std::vector<float>													_pointletLoad;
 		i32																	_attributeBand = 0;
 		i32																	_prevAttributeBand = 0;
 		Attribute															_attToUse = Attribute::RGB;

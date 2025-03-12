@@ -6,6 +6,18 @@
 #extension GL_KHR_shader_subgroup_vote : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 
+const vec3 COLOR_GRADIENT[9] = {
+	vec3(255,255,204) / 255.0,
+	vec3(255,237,160) / 255.0,
+	vec3(254,217,118) / 255.0,
+	vec3(254,178,76) / 255.0,
+	vec3(253,141,60) / 255.0,
+	vec3(252,78,42) / 255.0,
+	vec3(227,26,28) / 255.0,
+	vec3(189,0,38) / 255.0,
+	vec3(128,0,38) / 255.0
+};
+
 layout(std430, binding = 0) restrict buffer depthBuffer {
     uint64_t _depth[]; //Los 32 bits m�s significativos son para la profundidad, los 32 restantes para el atributo del punto.
 };
@@ -17,6 +29,75 @@ layout(std430, binding = 7) restrict readonly buffer vPosition {
 layout(std430, binding = 9) restrict readonly buffer vAttributes {
     uint att[];
 };
+
+layout(std430, binding = 11) restrict readonly buffer vPointletIndices {
+    uint pointletIndex[];
+};
+
+layout(std430, binding = 12) restrict readonly buffer vPointletLoad {
+    float pointletLoad[];
+};
+
+subroutine uint attributeType(uint index);
+subroutine uniform attributeType GetAttributeUniform;
+
+// --
+
+#define PHI 0.618033988749895f
+
+float getHueValue(uint id)
+{
+	const float h = id * PHI;
+
+	return mod(h, 1.0f);
+}
+
+vec3 HSVtoRGB(float h, float s, float v)
+{
+	const int h_i = int(h * 6.0f);
+	const float f = h * 6.0f - h_i;
+	const float p = v * (1.0f - s);
+	const float q = v * (1.0f - f * s);
+	const float t = v * (1.0f - (1.0f - f) * s);
+
+	switch (h_i)
+	{
+	case 0:
+		return vec3(v, t, p);
+	case 1:
+		return vec3(q, v, p);
+	case 2:
+		return vec3(p, v, t);
+	case 3:
+		return vec3(p, q, v);
+	case 4:
+		return vec3(t, p, v);
+	case 5:
+		return vec3(v, p, q);
+	}
+
+	return vec3(.0f);
+}
+
+subroutine(attributeType)
+uint getAttribute(uint index) {
+	return att[index];
+}
+
+subroutine(attributeType)
+uint getPointletColor(uint index) {
+	return packUnorm4x8(vec4(HSVtoRGB(getHueValue(pointletIndex[index]), .98f, .98f), 1.0f));
+}
+
+subroutine(attributeType)
+uint getPointletLoad(uint index) {
+	float weightedLoad = pointletLoad[index] * 8.0f;
+	int loadIndex = int(weightedLoad);
+	vec3 gradientColor = mix(COLOR_GRADIENT[max(0, loadIndex - 1)], COLOR_GRADIENT[loadIndex], weightedLoad - loadIndex);
+	return packUnorm4x8(vec4(gradientColor, 1.0f));
+}
+
+// ----
 
 uniform uint pointsOffset;
 uniform uint numPoints;
@@ -47,7 +128,7 @@ void main() {
 
             //Asignamos la profundidad minima al depthBuffer. Esto se ejecutara una sola vez en el caso de haber podido reducir.
             if (minDepth < currentDepth && minDepth == uintDepth) {
-                const uint64_t depthAndPointId = att[index] | (uint64_t(minDepth) << 32);
+                const uint64_t depthAndPointId = GetAttributeUniform(index) | (uint64_t(minDepth) << 32);
                 atomicMin(_depth[depthBufferIndex], depthAndPointId);
             }
         }

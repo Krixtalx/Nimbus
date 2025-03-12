@@ -134,7 +134,7 @@ void Nimbus::SettingsWindow::renderWindow() {
 				ImGui::TableNextColumn();
 				GuiUtilities::Checkbox(SETTINGS_GENERAL_SHOWMESHLETAABB, "meshletsAABBs", &appState->_renderMeshletsAABBs, true);
 
-				// Render with EDL
+				//Render with EDL
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 				GuiUtilities::Checkbox(SETTINGS_GENERAL_USEEDL, "renderWithEDL", &appState->_renderWithEDL, true);
@@ -142,7 +142,7 @@ void Nimbus::SettingsWindow::renderWindow() {
 					ImGui::DragFloat("EDL Strength", &appState->_edlStrength, 1, 1, 1200);
 				}
 
-				// Grid color
+				//Grid color
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 				GuiUtilities::ColorPicker(SETTINGS_GENERAL_GRIDCOLOR, "gridColor", appState->_gridColor, 0, true);
@@ -153,6 +153,12 @@ void Nimbus::SettingsWindow::renderWindow() {
 		}
 
 		if (GuiUtilities::CollapsingHeader(GENERIC_COLOR, "settingscolor_header")) {
+			//Meshlet index
+			GuiUtilities::Checkbox(SETTINGS_COLOR_SHOWMESHLETINDEX, "meshletIndexColouring", &appState->_showMeshletIndex, true);
+
+			//Meshlet load
+			GuiUtilities::Checkbox(SETTINGS_COLOR_SHOWMESHLETLOAD, "meshletLoadColouring", &appState->_showMeshletLoad, true);
+
 			/*static ImGradientMark* draggingMark = nullptr;
 			static ImGradientMark* selectedMark = nullptr;
 

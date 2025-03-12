@@ -25,6 +25,8 @@ namespace Nimbus {
 		bool							_renderGrid = true;
 		bool							_renderMeshletsAABBs = false;
 		bool							_renderWithEDL = true;
+		bool							_showMeshletIndex = false;
+		bool							_showMeshletLoad = false;
 		float							_edlStrength = 300;
 		unsigned						_renderedPoints[3];
 		int								_numNeighbors = 1;

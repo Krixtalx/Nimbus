@@ -534,6 +534,8 @@ SETTINGS_GENERAL_SHOWMESHLETAABB|Show meshlets AABB|Mostrar AABB de meshlets
 SETTINGS_GENERAL_USECOMPUTESHADERS|Use compute shaders|Usar compute shaders
 SETTINGS_GENERAL_USEEDL|Use Eye-Dome Lighting|Usar Eye-Dome Lighting
 SETTINGS_COLOR_GRADIENT|Spectral data color gradient|Gradiente de color para datos espectrales
+SETTINGS_COLOR_MESHLETINDEX|Show meshlets indices|Mostrar índice de meshlet
+SETTINGS_COLOR_MESHLETLOAD|Show meshlets load|Mostrar carga de meshlets
 SETTINGS_INPUT|Input|Entrada
 SETTINGS_INPUT_DCLICKSPEED|Double click speed (s)|Velocidad de doble click (s)
 SETTINGS_INPUT_DRAGTHRESH|Pointer drag threshold (px)|Umbral de arrastre del puntero (px)
