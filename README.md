@@ -5,7 +5,7 @@
 
 ![License: CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/80x15.png)
 
-# About
+## About
 
 This repository contains the source code for the paper 'Virtualized Point Cloud Rendering', currently submitted to IEEE Transactions on Graphics and Visualization. Our paper is inspired by previous works of the TU Wien research group. We move the rasterization pipeline from OpenGL's vertex and fragment shaders to compute shaders. However, one of the remaining drawbacks of this approach is that the point cloud must entirely fit in the GPU VRAM. While some computers out there have a large VRAM capacity, commodity hardware typically oscillates between 6 and 12GB. 
 
@@ -15,7 +15,7 @@ We propose that point cloud data can be transferred from disk to CPU and GPU as 
     <img src="Images/Nimbus.gif"/>
 </p>
 
-# Features
+## Features
 
 The main feature of this project is the virtualization of point cloud data. However, some of the drawbacks of previous work remain even with virtualization. For instance, point clouds that do not entirely fit into the VRAM must be subsampled via a Level of Detail (LoD) system. The LoD is kind of a tradeoff between performance and not providing visual cues of missing points. Besides this, we also use a fast hole-filling algorithm that fills gaps as long as there is at least one non-empty pixel in a 3x3 neighborhood (which can be changed). We also offer occlusion checks that help to clean point clouds with several overlapping surfaces, as illustrated in the following image.
 
@@ -29,7 +29,7 @@ Additionally, we propose another aggregation of points into meshlets (coined poi
     <img src="Images/sort_spot.png" style="width:60%;"/>
 </p>
 
-# Building
+## Building
 
 - Clone the repository.
 - Go to `Project scripts` and execute the setup file for Windows O.S.
@@ -39,7 +39,7 @@ Additionally, we propose another aggregation of points into meshlets (coined poi
 > [!CAUTION]
 > This repository was tested only over Windows O.S.
 
-# How to cite
+## How to cite
 
      @article{Collado_2024,
         title={Virtualized Point Cloud Rendering},
