@@ -41,15 +41,15 @@ Additionally, we propose another aggregation of points into meshlets (coined poi
 
 ## How to cite
 
-@article{10972035,
-  author={Collado, José A. and López, Alfonso and Jurado, Juan M. and Jiménez, J. Roberto},
-  journal={IEEE Transactions on Visualization and Computer Graphics}, 
-  title={Virtualized Point Cloud Rendering}, 
-  year={2025},
-  volume={},
-  number={},
-  pages={1-14},
-  keywords={GPU-Driven;GPGPU;Point cloud rendering;Out-of-core rendering;Dynamic rendering;Virtual memory system;Level of detail;Acceleration structures;Rasterization;Visibility;Point-based models},
-  doi={10.1109/TVCG.2025.3562696}
-  }
+    @article{Collado_2025,
+      author={Collado, José A. and López, Alfonso and Jurado, Juan M. and Jiménez, J. Roberto},
+      journal={IEEE Transactions on Visualization and Computer Graphics}, 
+      title={Virtualized Point Cloud Rendering}, 
+      year={2025},
+      volume={},
+      number={},
+      pages={1-14},
+      keywords={GPU-Driven;GPGPU;Point cloud rendering;Out-of-core rendering;Dynamic rendering;Virtual memory system;Level of detail;Acceleration structures;Rasterization;Visibility;Point-based models},
+      doi={10.1109/TVCG.2025.3562696}
+      }
 
