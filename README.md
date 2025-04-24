@@ -20,7 +20,7 @@ In this work, we transfer point cloud data from disk to CPU and GPU as required.
 The main feature of this project is the virtualization of point cloud data. However, some of the drawbacks of previous work remain even with virtualization. For instance, point clouds that do not entirely fit into the VRAM must be subsampled via a Level of Detail (LoD) system. The LoD is kind of a tradeoff between performance and not providing visual cues of missing points. Besides this, we also use a fast hole-filling algorithm that fills gaps as long as there is at least one non-empty pixel in a 3x3 neighborhood (which can be changed). We also offer occlusion checks that help to clean point clouds with several overlapping surfaces, as illustrated in the following image.
 
 <p align="center">
-    <img src="Images/occlusion_hole_filling.png" style="width:60%;"/>
+    <img src="Images/occlusion_hole_filling.png" style="width:90%;"/>
 </p>
 
 Additionally, we propose another aggregation of points into meshlets (coined pointlets in our paper) using Hilbert encoding rather than Morton. While not perfect, it mitigates the spatial jumps reported in Morton. Note that a large pointlet is less likely to be discarded during frustum culling, and therefore, we would project points into our viewport even though they are not visible. 
