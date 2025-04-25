@@ -1,6 +1,7 @@
 #include "CorePch.h"
 #include "PointCloud.h"
 
+#include <algorithm>
 #include <glm/ext/matrix_projection.hpp>
 
 #include "Geometry/Operators2D.h"
@@ -16,27 +17,46 @@
 #include "Utilities/ChronoUtilities.h"
 
 
-Nimbus::PointCloud::PointCloud(const std::string& name) : Model3D(name), _meanMeshletExtent(0), _classification(0) {
+Nimbus::PointCloud::PointCloud(const std::string& name) :
+	Model3D(name), _meanMeshletExtent(0), _numVisiblePoints(0), _numCompactInfo(0), _maxPointsToMove(0), _numPoints(0),
+	_currentAttFileSize(0)
+{
 	_material = MaterialList::getInstance()->isMaterialAvailable("PointCloudMaterial");
 	std::ranges::fill(_availableDataBands, 0);
 }
 
-Nimbus::PointCloud::PointCloud(const std::string& name, const AABB& aabb, const u32& classification, const vec3& pos,
-							const vec3& rot, const vec3& scale) : Model3D(name, aabb, pos, rot, scale),
-	_meanMeshletExtent(0), _classification(classification) {
+Nimbus::PointCloud::PointCloud(const std::string& name, const AABB& aabb, const vec3& pos,
+                               const vec3& rot, const vec3& scale) : Model3D(name, aabb, pos, rot, scale),
+                                                                     _meanMeshletExtent(0), _numVisiblePoints(0),
+                                                                     _numCompactInfo(0),
+                                                                     _maxPointsToMove(0),
+                                                                     _numPoints(0),
+                                                                     _currentAttFileSize(0)
+{
 	std::ranges::fill(_availableDataBands, 0);
 	_material = MaterialList::getInstance()->isMaterialAvailable("PointCloudMaterial");
 }
 
-Nimbus::PointCloud::PointCloud(const std::string& name, const std::vector<VAO::Point>& points, const AABB& aabb, const u32& classification, const vec3& pos, const vec3& rot, const vec3& scale) :
-	Model3D(name, aabb, pos, rot, scale), _classification(classification) {
+Nimbus::PointCloud::PointCloud(
+	const std::string& name, const std::vector<VAO::Point>& points, const AABB& aabb, const vec3& pos, const vec3& rot, 
+	const vec3& scale) : Model3D(name, aabb, pos, rot, scale),
+						_meanMeshletExtent(0),
+						_numVisiblePoints(0),
+						_numCompactInfo(0), 
+						_maxPointsToMove(0),
+						_numPoints(0),
+						_currentAttFileSize(0)
+{
 	_position.reserve(points.size());
 	_rgbColor.reserve(points.size());
+
 	std::ranges::fill(_availableDataBands, 0);
-	for (auto& point : points) {
+	for (auto& point : points)
+	{
 		_position.push_back(point._point);
 		_rgbColor.push_back(point._rgb);
 	}
+
 	_material = MaterialList::getInstance()->isMaterialAvailable("PointCloudMaterial");
 }
 
@@ -49,43 +69,6 @@ Nimbus::PointCloud::~PointCloud() = default;
  */
 void Nimbus::PointCloud::drawModel(dmat4 viewProjMatrix) {
 	throw std::logic_error("The method is no longer usable.");
-	if (_enabled) {
-		updateCloud(); //Esta funcion se llamar� desde el loop de renderizado, por lo que es seguro que se ejecutar� en el hilo principal. Por ello, aprovechamos para actualizar los recursos OpenGL que esten pendientes de actualizar.
-
-		viewProjMatrix = viewProjMatrix * getModelMatrix();
-
-		RenderingShader* renderShader = _material->getAssociatedShader();
-		renderShader->setUniform("meshletSize", _meshletSize);
-		renderShader->setUniform("classColor", FileManager::LASClassificationColors[_classification]);
-		renderShader->setUniform("mModelViewProj", viewProjMatrix);
-		_material->applyMaterial();
-
-		if (!_position.empty()) {
-			_GPUResources.bindBuffer(GPUResources::SSBOSlots::PositionFrame1, GPUResources::GPUBinding::Position);
-			_GPUResources.bindBuffer(GPUResources::SSBOSlots::AttributeFrame1, GPUResources::GPUBinding::Attribute);
-			if (getMeshletNumber() > 0)
-				_GPUResources.bindBuffer(GPUResources::SSBOSlots::CullingBuffer, GPUResources::GPUBinding::CullingBuffer);
-			/*if (!_enableDebugView) {
-				if (_renderMode != _renderModes[0]) {
-					if (_renderMode == _renderModes[1]) {
-						_GPUResources.bindBuffer(GPUResources::SSBOSlots::Thermal, GPUResources::GPUBinding::FusionData);
-					} else if (_renderMode == _renderModes[2]) {
-						_GPUResources.bindBuffer(GPUResources::SSBOSlots::Multispectral, GPUResources::GPUBinding::FusionData);
-					} else if (_renderMode == _renderModes[3]) {
-						_GPUResources.bindBuffer(GPUResources::SSBOSlots::Hyperspectral, GPUResources::GPUBinding::FusionData);
-					}
-					_material->setSubroutine(ShaderEnum::VertexSubroutines::VERTEX_COLOR_SOURCE, "useFusionDataAsColor");
-				} else {
-					_material->setSubroutine(ShaderEnum::VertexSubroutines::VERTEX_COLOR_SOURCE, "usePointColor");
-				}
-			}*/
-			glDrawArrays(GL_POINTS, 0, _position.size());
-		}
-
-		for (const auto& subcloud : _subClouds) {
-			subcloud->drawModel(viewProjMatrix);
-		}
-	}
 }
 
 /**
@@ -113,9 +96,9 @@ u32 morton3D(float x, float y, float z) {
 	x = x * 1023.f + 0.5f;
 	y = y * 1023.f + 0.5f;
 	z = z * 1023.f + 0.5f;
-	const u32 xx = expandBits((u32)x);
-	const u32 yy = expandBits((u32)y);
-	const u32 zz = expandBits((u32)z);
+	const u32 xx = expandBits(static_cast<u32>(x));
+	const u32 yy = expandBits(static_cast<u32>(y));
+	const u32 zz = expandBits(static_cast<u32>(z));
 	return xx * 4 + yy * 2 + zz;
 }
 
@@ -178,7 +161,7 @@ u32 transformCurve(const u32 in, const u32 bits, const u32* lookupTable) {
 
 	for (u32 i = 0; i < bits; ++i) {
 		x = _rotl64(x, 3);
-		x ^= lookupTable[u32(x)];
+		x ^= lookupTable[static_cast<u32>(x)];
 	}
 
 	return x >> 29;
@@ -276,13 +259,15 @@ std::vector<u32> Nimbus::PointCloud::kdTreeSorting() {
 	std::iota(neighborsOrder.begin(), neighborsOrder.end(), 0);
 	std::ranges::shuffle(neighborsOrder, std::default_random_engine(numPoints));
 	std::vector<u32> order(_position.size());
+
 	for (int i = 0; i < numMeshlets; ++i) {
 		resultSet.init(ret_index.data(), out_dist_sqr.data());
 		tree.findNeighbors(resultSet, _position[neighborsOrder[i] * _meshletSize].data.data, { 0.0f, true });
+
 		u32 limit = _meshletSize;
 		const u32 left = numPoints - i * _meshletSize;
-		if (left < limit)
-			limit = left;
+		limit = std::min(left, limit);
+
 		for (int j = 0; j < limit; ++j) {
 			order[i * _meshletSize + j] = ret_index[j];
 			tree.removePoint(ret_index[j]);
@@ -306,20 +291,25 @@ void reorder(std::vector<u32>& order, std::vector<T>& v) {
  * \param saveMeshlets Indica si se deben guardar los meshlets en disco.
  * \param shuffleMeshlet Indica si se deben mezclar los puntos dentro de cada meshlet.
  */
-void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const bool saveMeshlets, const bool shuffleMeshlet) {
+void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const bool saveMeshlets, const bool shuffleMeshlet, const bool clearBuffers) {
 	try {
 		_optimized = false;
 
 		_meshletSize = computeMeshletSize(getNumberOfPoints());
 		_numPoints = getNumberOfPoints();
 
+#ifdef NDEBUG
 		fmt::print("Using {} as meshlet size\n", _meshletSize);
+#endif
 
 		const auto numPoints = _position.size();
 		auto numMeshlets = static_cast<u32>(_position.size() / _meshletSize);
 		if (numPoints > static_cast<u64>(numMeshlets) * _meshletSize)
 			numMeshlets++;
+
+#ifdef NDEBUG
 		fmt::print("{} meshlets\n", numMeshlets);
+#endif
 
 		std::vector<u32> order;
 
@@ -337,9 +327,10 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 			break;
 		}
 
-
+#ifdef NDEBUG
 		auto timeMs = ChronoUtilities::getDuration();
 		spdlog::info("Point cloud spatial ordering of {} points in {} ms", _position.size(), timeMs);
+#endif
 
 		ChronoUtilities::initChrono();
 		_meshlets.clear();
@@ -348,8 +339,7 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 		for (u32 i = 0; i < numMeshlets; ++i) {
 			u32 limit = _meshletSize;
 			const u32 left = numPoints - i * _meshletSize;
-			if (left < limit)
-				limit = left;
+			limit = std::min(left, limit);
 			if (shuffleMeshlet)
 				std::shuffle(order.begin() + i * _meshletSize, order.begin() + i * _meshletSize + limit, std::default_random_engine(numPoints));
 			_meshlets.emplace_back();
@@ -374,8 +364,10 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 			spdlog::warn("{} doesn't have a normal for each point", this->_name);
 		}
 
+#ifdef NDEBUG
 		timeMs = ChronoUtilities::getDuration();
 		spdlog::info("Point cloud reordering of {} points in {} ms", _position.size(), timeMs);
+#endif
 
 		ChronoUtilities::initChrono();
 		switch (sortMethod) {
@@ -390,20 +382,23 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 			break;
 		}
 
+#ifdef NDEBUG
 		timeMs = ChronoUtilities::getDuration();
 		spdlog::info("Point cloud metrics computation of {} points in {} ms", _position.size(), timeMs);
+#endif
 
 		if (saveMeshlets) {
 			saveBinaryFile(_savePath);
 			initializeReadStreams();
 		}
-		_position.clear();
-		_rgbColor.clear();
+
+		if (clearBuffers) {
+			_position.clear();
+			_rgbColor.clear();
+		}
 
 		_optimized = true;
-		_meshletsNeedUpdate = true;
 		needUpdate();
-		_optimized = true;
 	} catch (std::exception& e) {
 		throw e;
 	}
@@ -434,6 +429,8 @@ void Nimbus::PointCloud::computeMetrics(const std::string& methodName) {
 	}
 	stdDesv /= numMeshlets;
 	stdDesv = std::sqrt(stdDesv);
+
+#ifdef _DEBUG
 	spdlog::info("Spatial sorting statistics for {}", this->_name);
 	spdlog::info("{}\n", methodName);
 	spdlog::info("Min extent: {}", minExtent);
@@ -441,11 +438,12 @@ void Nimbus::PointCloud::computeMetrics(const std::string& methodName) {
 	spdlog::info("Mean extent: {}", meanExtent);
 	spdlog::info("Std desv: {}", stdDesv);
 	spdlog::info("Mean squareness: {}\n", meanSquareness);
+#endif
 }
 
 u32 Nimbus::PointCloud::computeMeshletSize(const u64 numPoints) {
 	u32 meshletSize = std::pow(2, std::ceil(log2f(numPoints / 100000.f)));
-	meshletSize = std::min(meshletSize, (u32)UINT16_MAX);
+	meshletSize = std::min(meshletSize, static_cast<u32>(UINT16_MAX));
 	meshletSize = std::max(meshletSize, 512u);
 	return meshletSize;
 }
@@ -504,12 +502,33 @@ void Nimbus::PointCloud::addNewPoint(const VAO::Point& newPoint) {
  */
 void Nimbus::PointCloud::addNewPoints(const std::vector<VAO::Point>& newPoints) {
 	_position.reserve(_position.size() + newPoints.size());
+	_rgbColor.reserve(_position.size() + newPoints.size());
+
 	for (const auto& p : newPoints) {
 		_position.push_back(p._point);
 		_rgbColor.push_back(p._rgb);
 		_aabb.update(p._point);
 	}
 	//spatialOrdering();
+}
+
+/**
+ * A�ade nuevos puntos al final de la nube.
+ *
+ * \param points puntero hacia los puntos que debemos añadir.
+ * \param rgb puntero hacia el atributo de los puntos que debemos añadir.
+ */
+void Nimbus::PointCloud::addNewPoints(glm::vec3* points, glm::u32* rgb, size_t offset, size_t size, const AABB& aabb) {
+	std::copy_n(points, size, _position.data() + offset);
+	std::copy_n(rgb, size, _rgbColor.data() + offset);
+	_aabb.update(aabb);
+
+	//for (int idx = 0; idx < size; ++idx)
+	//{
+	//	_position.push_back(points[idx]);
+	//	_rgbColor.push_back(rgb[idx]);
+	//	_aabb.update(points[idx]);
+	//}
 }
 
 /**
@@ -522,7 +541,6 @@ void Nimbus::PointCloud::addNormals(const std::vector<vec3>& normals) {
 		_normals.push_back(p);
 	}
 }
-
 
 /**
  * \brief Sustituye los puntos actuales de la nube por los especificados en el vector.
@@ -594,7 +612,7 @@ void Nimbus::PointCloud::setColor(const std::vector<vec4>& colorVector) {
  */
 void Nimbus::PointCloud::setData(const Attribute& att, const u32 band, const std::vector<float>& dataVector) {
 	if (att != Attribute::RGB) {
-		u8 dataType = (u8)att;
+		u8 dataType = static_cast<u8>(att);
 		if (_fusionData[dataType].empty()) {
 			_fusionData[dataType].resize(maxBandsPerAtt[dataType]);
 			_fusionDataMinMax[dataType].resize(maxBandsPerAtt[dataType]);
@@ -616,13 +634,12 @@ void Nimbus::PointCloud::setData(const Attribute& att, const u32 band, const std
 		std::ofstream of;
 		if (std::filesystem::exists(_savePath + fileExtension)) {
 			of.open(_savePath + fileExtension, std::ios::in | std::ios::out | std::ios::binary);
-			of.seekp((std::streamoff)band * getNumberOfPoints() * sizeof(f32));
+			of.seekp(static_cast<std::streamoff>(band) * getNumberOfPoints() * sizeof(f32));
 		} else {
 			of.open(_savePath + fileExtension, std::ios::out | std::ios::binary);
 		}
-		saveFusionData(of, (Attribute)dataType, band);
-		if ((band + 1) > _availableDataBands[dataType])
-			_availableDataBands[dataType] = (band + 1);
+		saveFusionData(of, static_cast<Attribute>(dataType), band);
+		_availableDataBands[dataType] = std::max<u32>(band + 1, _availableDataBands[dataType]);
 		saveMetadata(_savePath);
 		_fusionData[dataType][band].clear();
 	} else {
@@ -792,17 +809,30 @@ void Nimbus::PointCloud::needUpdate() {
 void Nimbus::PointCloud::updateCloud() {
 	reloadAttribute();
 
-	if (_meshletsNeedUpdate && !_meshlets.empty()) {
-		std::vector<AABB> meshletsAABBs(_meshlets.size());
-		for (int i = 0; i < _meshlets.size(); ++i) {
-			meshletsAABBs[i] = _meshlets[i].aabb;
+	if (_meshletsNeedUpdate)
+	{
+		if (!_meshlets.empty()) {
+			std::vector<AABB> meshletsAABBs(_meshlets.size());
+			for (int i = 0; i < _meshlets.size(); ++i) {
+				meshletsAABBs[i] = _meshlets[i].aabb;
+			}
+			_currentFrameCulling.resize(_meshlets.size());
+			_lastFrameCulling.resize(_meshlets.size());
+			_GPUResources.reserveGPUMappedMemory<u16>(GPUResources::SSBOSlots::CullingBuffer, _meshlets.size(), GL_MAP_READ_BIT);
+			_GPUResources.reserveGPUMappedMemory<CompactInfo>(GPUResources::SSBOSlots::CompactionInfo, _meshlets.size(), GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
+			_GPUResources.uploadToGPU(GPUResources::SSBOSlots::Meshlets, meshletsAABBs.data(), meshletsAABBs.size(), 0);
+			_meshletsNeedUpdate = false;
 		}
-		_currentFrameCulling.resize(_meshlets.size());
-		_lastFrameCulling.resize(_meshlets.size());
-		_GPUResources.reserveGPUMappedMemory<u16>(GPUResources::SSBOSlots::CullingBuffer, _meshlets.size(), GL_MAP_READ_BIT);
-		_GPUResources.reserveGPUMappedMemory<CompactInfo>(GPUResources::SSBOSlots::CompactionInfo, _meshlets.size(), GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
-		_GPUResources.uploadToGPU(GPUResources::SSBOSlots::Meshlets, meshletsAABBs.data(), meshletsAABBs.size(), 0);
-		_meshletsNeedUpdate = false;
+
+		//if (_numPointsAllocation)
+		//{
+		//	// Adapt buffer size
+		//	_position.resize(_numPointsAllocation);
+		//	_rgbColor.resize(_numPointsAllocation);
+
+		//	_initialAllocationMutex.release();
+		//	_numPointsAllocation = 0;
+		//}
 	}
 
 	if (_pickedNeedUpdate) {
@@ -826,7 +856,7 @@ void Nimbus::PointCloud::reloadAttribute() {
 			reopenAttributeReadStream(rf);
 		}
 	} else if (_attributeBand != _prevAttributeBand) {
-		_attributeBand = std::min(_attributeBand, _availableDataBands[(u8)_attToUse] - 1);
+		_attributeBand = std::min(_attributeBand, _availableDataBands[static_cast<u8>(_attToUse)] - 1);
 		std::ranges::fill(_lastFrameCulling, 0);
 		for (auto& meshlet : _meshlets) {
 			meshlet.pointsRequired = 0;
@@ -858,7 +888,7 @@ void Nimbus::PointCloud::initializeReadStreams() {
 }
 
 void Nimbus::PointCloud::reopenAttributeReadStream(std::ifstream& rf) {
-	std::string tmp = std::string(_renderAttributes[(u8)_attToUse]).substr(0, 3);
+	std::string tmp = std::string(_renderAttributes[static_cast<u8>(_attToUse)]).substr(0, 3);
 	const std::string fileExtension = std::format(".NimbusCloud{}", tmp);
 	rf.close();
 	rf.clear();
@@ -960,7 +990,7 @@ void Nimbus::PointCloud::saveRGB(std::ofstream& wf) {
 }
 
 void Nimbus::PointCloud::saveFusionData(std::ofstream& wf, const Attribute dataSource, const u32 band) {
-	wf.write((char*)_fusionData[(u8)dataSource][band].data(), sizeof(float) * _fusionData[(u8)dataSource][band].size());
+	wf.write((char*)_fusionData[static_cast<u8>(dataSource)][band].data(), sizeof(float) * _fusionData[static_cast<u8>(dataSource)][band].size());
 }
 
 void Nimbus::PointCloud::saveBinaryFile(const std::string& path) {
@@ -976,7 +1006,7 @@ void Nimbus::PointCloud::saveBinaryFile(const std::string& path) {
 			savePosition(positionWf);
 			positionWf.close();
 		} else {
-			spdlog::error("Couldnt open {} to save meshlet position", filename);
+			spdlog::error("Couldn't open {} to save meshlet position", filename);
 		}
 	});
 
@@ -987,7 +1017,7 @@ void Nimbus::PointCloud::saveBinaryFile(const std::string& path) {
 			saveRGB(rgbWf);
 			rgbWf.close();
 		} else {
-			spdlog::error("Couldnt open {} to save meshlet RGB", filename);
+			spdlog::error("Couldn't open {} to save meshlet RGB", filename);
 		}
 	});
 
@@ -995,7 +1025,10 @@ void Nimbus::PointCloud::saveBinaryFile(const std::string& path) {
 	rgbSaveThread.join();
 	const auto end = std::chrono::high_resolution_clock::now();
 	const auto int_s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+#ifdef NDEBUG
 	spdlog::info("Save in {} ms", int_s.count());
+#endif
 }
 
 void Nimbus::PointCloud::loadBinaryFile(const std::string& path) {
@@ -1031,12 +1064,12 @@ void Nimbus::PointCloud::loadBinaryFile(const std::string& path) {
 		rf.read(reinterpret_cast<char*>(&_numPoints), sizeof(_numPoints));
 
 		for (auto& databands : _availableDataBands)
-			rf.read((char*)&databands, sizeof(databands));
+			rf.read(reinterpret_cast<char*>(&databands), sizeof(databands));
 		int i = 0;
 		for (auto& minMaxVec : _fusionDataMinMax) {
 			minMaxVec.resize(_availableDataBands[i++]);
 			for (auto& minMax : minMaxVec)
-				rf.read((char*)&minMax, sizeof(vec2));
+				rf.read(reinterpret_cast<char*>(&minMax), sizeof(vec2));
 		}
 
 		rf.read(reinterpret_cast<char*>(&_meshletSize), sizeof(u32));
@@ -1048,10 +1081,10 @@ void Nimbus::PointCloud::loadBinaryFile(const std::string& path) {
 		rf.read(reinterpret_cast<char*>(&floatToBinary.binary), sizeof(u32));
 		_meanMeshletExtent = floatToBinary.f;
 		size_t numMeshlets;
-		rf.read((char*)&numMeshlets, sizeof(size_t));
+		rf.read(reinterpret_cast<char*>(&numMeshlets), sizeof(size_t));
 		_meshlets.resize(numMeshlets);
 		for (auto& meshlet : _meshlets) {
-			rf.read((char*)&meshlet.aabb, sizeof(AABB));
+			rf.read(reinterpret_cast<char*>(&meshlet.aabb), sizeof(AABB));
 		}
 		rf.close();
 
@@ -1079,7 +1112,7 @@ void Nimbus::PointCloud::loadPositionsFromBinaryFile(const std::string& path) {
 		rf.seekg(0, std::ifstream::beg);
 		const auto numPoints = size / sizeof(vec3);
 		_position.resize(numPoints);
-		rf.read((char*)_position.data(), size);
+		rf.read(reinterpret_cast<char*>(_position.data()), size);
 	}
 }
 
@@ -1092,7 +1125,7 @@ void Nimbus::PointCloud::loadRGBFromBinaryFile(const std::string& path) {
 		rf.seekg(0, std::ifstream::beg);
 		const auto numColors = size / sizeof(u32);
 		_rgbColor.resize(numColors);
-		rf.read((char*)_rgbColor.data(), size);
+		rf.read(reinterpret_cast<char*>(_rgbColor.data()), size);
 	}
 }
 
@@ -1127,6 +1160,7 @@ void Nimbus::PointCloud::updateAABB(const vec3& point) {
 	_aabb.update(point);
 }
 
-Nimbus::Attribute Nimbus::PointCloud::getCurrentAttribute() {
+Nimbus::Attribute Nimbus::PointCloud::getCurrentAttribute() const
+{
 	return _attToUse;
 }

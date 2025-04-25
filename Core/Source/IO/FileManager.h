@@ -4,13 +4,42 @@ namespace Nimbus {
 	class PointCloud;
 
 	class FileManager {
-		static constexpr u64 pointsPerBatch = 200000000;
+		struct LasHeader {
+			int			_versionMajor = 0;
+			int			_versionMinor = 0;
+			std::string	_name;
+			std::string	_filePath;
+			uint64_t	_headerSize = 0;
+			uint64_t	_offsetToPointData = 0;
+			uint64_t	_format = 0;
+			uint64_t	_bytesPerPoint = 0;
+			uint64_t	_numPoints = 0;
+			dvec3		_scale = { 0.0, 0.0, 0.0 };
+			dvec3		_offset = { 0.0, 0.0, 0.0 };
+			dvec3		_min = { 0.0, 0.0, 0.0 };
+			dvec3		_max = { 0.0, 0.0, 0.0 };
+		};
 
+		struct ReadTask
+		{
+			LasHeader* _header;
+			std::string _name, _rootPath;
+			i64			_offset;
+			i64			_length;
+		};
+
+		static constexpr u64 pointsPerBatch = 20000000;
+
+		static glm::u64 getNumPoints(const std::vector<std::string>& filepaths);
+		static bool loadBatch(ReadTask* task, AABB& aabb, const std::string& savePath, PointCloud::SortingMethod sortMethod);
+		static LasHeader loadHeader(const std::filesystem::path& file);
 		static bool loadPly(const std::string& filePath, bool useClassification = true);
 		static bool loadMergeLas(const std::vector<std::string>& filepaths, const bool useClassification = true);
+		static bool loadMergeLasParallel(const std::vector<std::string>& filepaths);
 		static bool loadNativeCloud(const std::string& filePath);
-		static bool mergeNimbusClouds(const std::string& cloudName1, const std::string& cloudName2, const std::string& mergeName, const std::string& rootPath, const
-		                           bool shouldShuffle);
+		static bool mergeNimbusClouds(
+			const std::string& rootPath, const std::string& cloudName1, const std::string& cloudName2, const std::string& mergeName, 
+			const AABB& aabb, bool shouldShuffle);
 
 	public:
 		static bool saving;

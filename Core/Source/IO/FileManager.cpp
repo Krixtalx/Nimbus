@@ -7,7 +7,7 @@
 #include "UI/GuiUtilities.h"
 #include "laszip/laszip_api.h"
 #include <future>
-
+#include "unsuck.hpp"
 
 bool Nimbus::FileManager::saving = false;
 unsigned Nimbus::FileManager::LASClassificationSize = 13;
@@ -78,6 +78,107 @@ vec4 Nimbus::FileManager::LASClassificationColors[] = {
 
 float Nimbus::FileManager::_loadProgress = 0.0f;
 float Nimbus::FileManager::_saveProgress = 0.0f;
+
+glm::u64 Nimbus::FileManager::getNumPoints(const std::vector<std::string>& filepaths)
+{
+	glm::u64 numPoints = 0;
+
+	for (const std::string& filepath : filepaths) {
+		const std::filesystem::path path = filepath;
+		LasHeader* header = new LasHeader(loadHeader(path.string()));
+
+		if (header->_numPoints)
+			numPoints += header->_numPoints;
+	}
+
+	return numPoints;
+}
+
+bool Nimbus::FileManager::loadBatch(ReadTask* task, AABB& aabb, const std::string& savePath, PointCloud::SortingMethod sortMethod)
+{
+	laszip_POINTER reader = nullptr;
+	laszip_point* pointPointer = nullptr;
+
+	laszip_BOOL isCompressed;
+	laszip_BOOL requestReader = true;
+
+	laszip_create(&reader);
+	laszip_request_compatibility_mode(reader, requestReader);
+
+	if (!laszip_open_reader(reader, task->_header->_filePath.c_str(), &isCompressed))
+	{
+		PointCloud* pointCloud = new PointCloud(task->_name);
+		pointCloud->_position.resize(task->_length);
+		pointCloud->_rgbColor.resize(task->_length);
+
+		laszip_get_point_pointer(reader, &pointPointer);
+		laszip_seek_point(reader, task->_offset);
+
+		for (int i = 0; i < task->_length; i++) {
+			dvec3 point;
+			laszip_read_point(reader);
+			laszip_get_coordinates(reader, &point[0]);
+
+			pointCloud->_position[i] = point;
+			pointCloud->_rgbColor[i] = VAO::Point::getFloatRGBColor({
+				static_cast<float>(pointPointer->rgb[0]) / 65536,
+				static_cast<float>(pointPointer->rgb[1]) / 65536,
+				static_cast<float>(pointPointer->rgb[2]) / 65536
+				});
+
+			aabb.update(point);
+		}
+
+		laszip_close_reader(reader);
+
+		pointCloud->_savePath = savePath;
+		pointCloud->_savePath += "\\" + task->_name;
+		pointCloud->spatialOrdering(sortMethod, true, false);
+
+		delete pointCloud;
+
+		return true;
+	}
+
+	return false;
+}
+
+Nimbus::FileManager::LasHeader Nimbus::FileManager::loadHeader(const std::filesystem::path& file)
+{
+	auto headerBuffer = readBinaryFile(file.string(), 0, 375);
+
+	LasHeader header;
+	header._versionMajor = headerBuffer->get<uint8_t>(24);
+	header._versionMinor = headerBuffer->get<uint8_t>(25);
+	header._headerSize = headerBuffer->get<uint16_t>(94);
+	header._offsetToPointData = headerBuffer->get<uint32_t>(96);
+	header._format = headerBuffer->get<uint8_t>(104);
+	header._bytesPerPoint = headerBuffer->get<uint16_t>(105);
+	header._name = file.stem().string();
+	header._filePath = file.string();
+
+	if (header._versionMajor == 1 && header._versionMinor <= 3) {
+		header._numPoints = headerBuffer->get<uint32_t>(107);
+	}
+	else {
+		header._numPoints = headerBuffer->get<uint64_t>(247);
+	}
+
+	header._scale[0] = headerBuffer->get<double>(131);
+	header._scale[1] = headerBuffer->get<double>(139);
+	header._scale[2] = headerBuffer->get<double>(147);
+	header._offset[0] = headerBuffer->get<double>(155);
+	header._offset[1] = headerBuffer->get<double>(163);
+	header._offset[2] = headerBuffer->get<double>(171);
+	header._min[0] = headerBuffer->get<double>(187);
+	header._min[1] = headerBuffer->get<double>(203);
+	header._min[2] = headerBuffer->get<double>(219);
+	header._max[0] = headerBuffer->get<double>(179);
+	header._max[1] = headerBuffer->get<double>(195);
+	header._max[2] = headerBuffer->get<double>(211);
+
+	return header;
+}
 
 /**
  * \brief Carga un fichero PLY
@@ -285,6 +386,7 @@ bool Nimbus::FileManager::loadPly(const std::string& filePath, bool useClassific
 
 			_aabb[classification].update(pointPos);
 		}
+
 		//Borramos las eedds usadas para msh_ply. En este punto, toda la informacion estan en la nube. Borrandolo ahora conseguimos bajar el uso de ram antes de hacer la optimizacion espacial. Se hace con free porque msh_ply es en C y usa malloc.
 		msh_ply_close(pf);
 		free(pos);
@@ -316,7 +418,7 @@ bool Nimbus::FileManager::loadPly(const std::string& filePath, bool useClassific
 			const auto cloud(new PointCloud(name));
 			for (size_t i = 0; i < 13; i++) {
 				if (_points[i].size() > 100) {
-					auto subcloud = std::make_unique<PointCloud>(LASClassificationStrings[i], _points[i], _aabb[i], i);
+					auto subcloud = std::make_unique<PointCloud>(LASClassificationStrings[i], _points[i], _aabb[i]);
 
 					if (haveNormals) {
 						subcloud->setNormals(normalsVector[i]);
@@ -400,7 +502,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 			auto offset = vec3(header->x_offset, header->y_offset, header->z_offset);
 
 			u64 remainingPoints = pointsNumber;
-			f64 pointsReaded = 0;
+			f64 pointsRead = 0;
 			u16 pointId = 0;
 			while (remainingPoints > 0) {
 				std::string chunkName = name + "_" + std::to_string(pointId++);
@@ -421,7 +523,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 					//El color en LAS/LAZ viene codificado en uint16. Para pasarlo a float lo dividimos entre 2^16
 					uint32_t codedColor = VAO::Point::getFloatRGBColor({ (float)pointR->rgb[0] / 65536, (float)pointR->rgb[1] / 65536, (float)pointR->rgb[2] / 65536 });
 					colors.push_back(codedColor);
-					_loadProgress = (float)currentFile / numFiles + (pointsReaded++ / (float)pointsNumber) / numFiles;
+					_loadProgress = (float)currentFile / numFiles + (pointsRead++ / (float)pointsNumber) / numFiles;
 				}
 
 				cloud->setPosition({ offset.x, offset.y, offset.z });
@@ -480,7 +582,7 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 			std::string mergeName = "Merge_" + std::to_string(mergeId++);
 			asyncCalls.push_back(std::async(std::launch::async,
 											[=]() {
-				if (mergeNimbusClouds(cloudName1, cloudName2, mergeName, rootPath, mergeId == totalMerges))
+				if (mergeNimbusClouds(rootPath, cloudName1, cloudName2, mergeName, fullCloudAABB, mergeId == totalMerges))
 					return mergeName;
 				return std::string();
 			}));
@@ -507,6 +609,205 @@ bool Nimbus::FileManager::loadMergeLas(const std::vector<std::string>& filepaths
 	return true;
 }
 
+bool Nimbus::FileManager::loadMergeLasParallel(const std::vector<std::string>& filepaths)
+{
+	_loadProgress = 0.f;
+
+	ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, _loadProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_OPENINGCLOUD).c_str() });
+
+	const auto start = std::chrono::high_resolution_clock::now();
+
+	std::vector<std::string> cloudNames;
+	std::vector<std::string> mergeCloudNames;
+	std::vector<LasHeader*> cloudHeaders;
+	std::vector<ReadTask*> readTasks;
+	AABB fullCloudAABB;
+	std::string name;
+	u32 maxNumThreads = std::thread::hardware_concurrency() - 1;
+	glm::u64 optimalPointsPerBatch = getNumPoints(filepaths) / maxNumThreads * 2;
+
+	for (const std::string& filepath : filepaths) {
+		const std::filesystem::path path = filepath;
+		LasHeader* header = new LasHeader(loadHeader(path.string()));
+
+		if (header->_numPoints)
+		{
+			cloudHeaders.push_back(header);
+			name = header->_name;
+
+			// Include tasks according to the number of points
+			u64 remainingPoints = header->_numPoints;
+			i64 offset = 0;
+			u16 pointId = 0;
+
+			while (remainingPoints > 0) {
+				i64 pointsToRead = static_cast<i64>(std::min(optimalPointsPerBatch, remainingPoints));
+				remainingPoints -= pointsToRead;
+				std::string chunkName = header->_name + "_" + std::to_string(pointId++);
+
+				readTasks.push_back(new ReadTask{
+					._header = cloudHeaders.back(), ._name = chunkName, ._rootPath = path.parent_path().string(),
+					._offset = offset, ._length = pointsToRead
+					});
+
+				offset += pointsToRead;
+			}
+		}
+	}
+
+	//
+	std::string rootPath = readTasks.front()->_rootPath;
+
+	// Thread and point cloud variables
+	std::vector<std::future<std::tuple<std::string, AABB, ReadTask*>>> readCalls;
+	u32 mergeId = 0;
+	size_t totalReadTasks = readTasks.size() / 2;
+	u32 readsCompleted = 0;
+
+	do
+	{
+		for (auto& future : readCalls) {
+			auto result = future.get();
+			auto chunkName = std::get<std::string>(result);
+
+			readsCompleted++;
+
+			if (!chunkName.empty()) {
+				AABB aabb = std::get<AABB>(result);
+				delete std::get<ReadTask*>(result);
+
+				fullCloudAABB.update(aabb);
+
+				mergeCloudNames.push_back(chunkName);
+				_loadProgress = static_cast<float>(readsCompleted) / static_cast<float>(totalReadTasks);
+			}
+
+		}
+
+		readCalls.clear();
+
+		while (!readTasks.empty() && readCalls.size() < maxNumThreads) {
+			ReadTask* readTask = readTasks.back();
+			readTasks.erase(readTasks.begin() + readTasks.size() - 1);
+			std::string mergeName = "Merge_" + std::to_string(mergeId++);
+
+			readCalls.push_back(std::async(std::launch::async,
+				[=] {
+					AABB aabb;
+					if (loadBatch(readTask, aabb, rootPath, PointCloud::SortingMethod::Hilbert))
+						return std::make_tuple(readTask->_name, aabb, readTask);
+					return std::make_tuple(std::string(""), aabb, readTask);
+				}));
+		}
+	}
+	while (!readCalls.empty());
+
+	_loadProgress = 1.0f;
+
+	//static float sortingProgress = 0;
+	//ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, sortingProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_SORTINGCLOUD).c_str() });
+
+	//size_t numCloudNames = cloudNames.size();
+
+	//#pragma omp parallel for
+	//for (int i = 0; i < static_cast<int>(numCloudNames); ++i) {
+	//	const std::string& cloudName = cloudNames[i];
+	//	auto cloud = new PointCloud(cloudName);
+	//	cloud->_aabb.update(fullCloudAABB);
+	//	cloud->_savePath = rootPath;
+	//	cloud->_savePath += "\\" + cloudName;
+	//	cloud->loadPositionsFromBinaryFile(cloud->_savePath);
+	//	cloud->loadRGBFromBinaryFile(cloud->_savePath);
+	//	cloud->spatialOrdering(PointCloud::SortingMethod::Hilbert, true, numCloudNames == 1);
+	//	delete cloud;
+
+	//	#pragma omp critical
+	//	mergeCloudNames.emplace(cloudName);
+
+	//	sortingProgress += 1.0f / static_cast<float>(cloudNames.size());
+	//}
+
+	//sortingProgress = 1.0f;
+
+	static float mergingProgress = 0;
+	ImGui::InsertNotification(ImGuiToast{ ImGuiToastType::Info, mergingProgress, LocaleStrings::getInstance()->getString(POPUP_PROGRESS_MERGINGCLOUD).c_str() });
+
+	std::vector<std::future<std::string>> mergeCalls;
+	size_t totalMerges = mergeCloudNames.size() - 1;
+
+	mergeId = 0;
+	do {
+		size_t numClouds = mergeCloudNames.size();
+		if (numClouds % 2 != 0)
+			--numClouds;
+
+		#pragma omp parallel for
+		for (int idx = 0; idx < numClouds; idx += 2)
+		{
+			std::string cloudName1 = mergeCloudNames[idx];
+			std::string cloudName2 = mergeCloudNames[idx + 1];
+
+			std::string mergeName = "Merge_" + std::to_string(idx / 2 + mergeId);
+			mergeNimbusClouds(rootPath, cloudName1, cloudName2, mergeName, fullCloudAABB, numClouds == 2);
+
+			#pragma omp critical
+			mergeCloudNames.push_back(mergeName);
+		}
+
+		mergeId += numClouds / 2;
+		mergingProgress = static_cast<float>(mergeId) / static_cast<float>(totalMerges);
+		mergeCloudNames.erase(mergeCloudNames.begin(), mergeCloudNames.begin() + numClouds);
+	} while (mergeCloudNames.size() > 1);
+	//do {
+	//	for (auto& future : mergeCalls) {
+	//		auto result = future.get();
+	//		if (!result.empty()) {
+	//			mergeCloudNames.push(result);
+	//			mergesCompleted++;
+	//			mergingProgress = static_cast<float>(mergesCompleted) / static_cast<float>(totalMerges);
+	//		}
+	//	}
+
+	//	mergeCalls.clear();
+	//	while (mergeCloudNames.size() > 1 && mergeCalls.size() < maxNumThreads) {
+	//		std::string cloudName1 = mergeCloudNames.front();
+	//		mergeCloudNames.pop();
+	//		std::string cloudName2 = mergeCloudNames.front();
+	//		mergeCloudNames.pop();
+
+	//		std::string mergeName = "Merge_" + std::to_string(mergeId++);
+	//		mergeCalls.push_back(std::async(std::launch::async,
+	//			[=]() {
+	//				if (mergeNimbusClouds(cloudName1, cloudName2, mergeName, fullCloudAABB, rootPath, mergeId == totalMerges))
+	//					return mergeName;
+	//				return std::string();
+	//			}));
+	//	}
+	//} while (!mergeCalls.empty());
+	//mergingProgress = 1.0f;
+
+	auto cloudName = mergeCloudNames.front();
+	auto cloud = new PointCloud(cloudName);
+	std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloud", rootPath + "\\" + name + ".NimbusCloud");
+	std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloudPos", rootPath + "\\" + name + ".NimbusCloudPos");
+	std::filesystem::rename(rootPath + "\\" + cloudName + ".NimbusCloudRGB", rootPath + "\\" + name + ".NimbusCloudRGB");
+	cloud->loadBinaryFile(rootPath + "\\" + name);
+	cloud->_name = name;
+	cloud->_savePath = rootPath + "\\" + name;
+	cloud->saveMetadata(rootPath + "\\" + name);
+	cloud->needUpdate();
+	Renderer::getInstance()->addModel(cloud);
+	const auto end = std::chrono::high_resolution_clock::now();
+
+	const auto int_s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	spdlog::info("{}: Files loaded in {} ms", __FUNCTION__, int_s.count());
+
+	for (LasHeader* header : cloudHeaders)
+		delete header;
+
+	return true;
+}
+
 bool Nimbus::FileManager::loadNativeCloud(const std::string& filePath) {
 	const auto path = std::filesystem::path(filePath);
 	const auto cloud = new PointCloud(path.filename().string(), {});
@@ -526,101 +827,184 @@ void reorder(std::vector<u32>& order, std::vector<T>& v) {
 	v = std::move(temp);
 }
 
-bool Nimbus::FileManager::mergeNimbusClouds(const std::string& cloudName1, const std::string& cloudName2, const std::string& mergeName, const std::string& rootPath, const bool shouldShuffle) {
+bool Nimbus::FileManager::mergeNimbusClouds(
+	const std::string& rootPath,
+	const std::string& cloudName1,
+	const std::string& cloudName2,
+	const std::string& mergeName,
+	const AABB& aabb,
+	bool shouldShuffle) {
+	// Constants for batch processing
+	const size_t BATCH_SIZE = 65536; // Adjust based on your system's cache size
+	const size_t STREAM_BUFFER_SIZE = 1 << 20; // 1MB
+
+	// Initialize clouds
 	PointCloud cloud1(cloudName1);
 	PointCloud cloud2(cloudName2);
 	std::string cloudPath1 = rootPath + "\\" + cloudName1;
 	std::string cloudPath2 = rootPath + "\\" + cloudName2;
+
+	// Load metadata
 	cloud1.loadBinaryFile(cloudPath1);
 	cloud1.closeReadStreams();
 	cloud2.loadBinaryFile(cloudPath2);
 	cloud2.closeReadStreams();
-	AABB mergedAABB = cloud1.getAABB();
-	mergedAABB.update(cloud2.getAABB());
+
+	// Prepare merged cloud
+	AABB mergedAABB = aabb;
+	//AABB mergedAABB = cloud1.getAABB();
+	//mergedAABB.update(cloud2.getAABB());
 	PointCloud mergedCloud(mergeName, mergedAABB);
 	mergedCloud._numPoints = cloud1._numPoints + cloud2._numPoints;
-	mergedCloud._meshletSize = PointCloud::computeMeshletSize(mergedCloud._numPoints);
+	mergedCloud._meshletSize = Nimbus::PointCloud::computeMeshletSize(mergedCloud._numPoints);
 	auto meshletSize = mergedCloud._meshletSize;
+
+	// Buffers must persist as long as streams exist
+	thread_local std::vector<char> inputBuffer1(STREAM_BUFFER_SIZE);
+	thread_local std::vector<char> inputBuffer2(STREAM_BUFFER_SIZE);
+	thread_local std::vector<char> rgbBuffer1(STREAM_BUFFER_SIZE);
+	thread_local std::vector<char> rgbBuffer2(STREAM_BUFFER_SIZE);
+	thread_local std::vector<char> outputPosBuffer(STREAM_BUFFER_SIZE);
+	thread_local std::vector<char> outputRgbBuffer(STREAM_BUFFER_SIZE);
+
+	// Input and output streams with buffers
 	std::ifstream cloud1Pos(cloudPath1 + ".NimbusCloudPos", std::ios::binary);
 	std::ifstream cloud2Pos(cloudPath2 + ".NimbusCloudPos", std::ios::binary);
 	std::ifstream cloud1Rgb(cloudPath1 + ".NimbusCloudRGB", std::ios::binary);
 	std::ifstream cloud2Rgb(cloudPath2 + ".NimbusCloudRGB", std::ios::binary);
+
 	std::ofstream mergedCloudPos(rootPath + "\\" + mergedCloud._name + ".NimbusCloudPos", std::ios::binary);
 	std::ofstream mergedCloudRgb(rootPath + "\\" + mergedCloud._name + ".NimbusCloudRGB", std::ios::binary);
-	if (cloud1Pos.good() && cloud2Pos.good() && cloud1Rgb.good() && cloud2Rgb.good() && mergedCloudPos.good() && mergedCloudRgb.good()) {
-		vec3 pos1, pos2;
-		u32 hilbert1, hilbert2, rgb1, rgb2;
-		cloud1Pos.read(reinterpret_cast<char*>(&pos1), sizeof(vec3));
-		cloud2Pos.read(reinterpret_cast<char*>(&pos2), sizeof(vec3));
-		cloud1Rgb.read(reinterpret_cast<char*>(&rgb1), sizeof(u32));
-		cloud2Rgb.read(reinterpret_cast<char*>(&rgb2), sizeof(u32));
-		hilbert1 = PointCloud::hilbert3D(pos1, mergedAABB);
-		hilbert2 = PointCloud::hilbert3D(pos2, mergedAABB);
-		u32 pointId = 0;
-		mergedCloud._meshlets.emplace_back();
-		AABB* currentMeshletAABB = &mergedCloud._meshlets.back().aabb;
-		std::vector<vec3> currentMeshletPosition;
-		currentMeshletPosition.reserve(meshletSize);
-		std::vector<u32> currentMeshletColor;
-		currentMeshletColor.reserve(meshletSize);
-		std::vector<u32> shuffling(meshletSize);
-		while (cloud1Pos.good() || cloud2Pos.good()) {
-			if (hilbert1 <= hilbert2 || !cloud2Pos.good()) {
-				currentMeshletAABB->update(pos1);
-				currentMeshletPosition.push_back(pos1);
-				currentMeshletColor.push_back(rgb1);
-				cloud1Pos.read(reinterpret_cast<char*>(&pos1), sizeof(vec3));
-				cloud1Rgb.read(reinterpret_cast<char*>(&rgb1), sizeof(u32));
-				if (cloud2Pos.good())
-					hilbert1 = PointCloud::hilbert3D(pos1, mergedAABB);
-			} else {
-				currentMeshletAABB->update(pos2);
-				currentMeshletPosition.push_back(pos2);
-				currentMeshletColor.push_back(rgb2);
-				cloud2Pos.read(reinterpret_cast<char*>(&pos2), sizeof(vec3));
-				cloud2Rgb.read(reinterpret_cast<char*>(&rgb2), sizeof(u32));
-				if (cloud1Pos.good())
-					hilbert2 = PointCloud::hilbert3D(pos2, mergedAABB);
+
+	// Associate buffers with streams
+	cloud1Pos.rdbuf()->pubsetbuf(inputBuffer1.data(), STREAM_BUFFER_SIZE);
+	cloud2Pos.rdbuf()->pubsetbuf(inputBuffer2.data(), STREAM_BUFFER_SIZE);
+	cloud1Rgb.rdbuf()->pubsetbuf(rgbBuffer1.data(), STREAM_BUFFER_SIZE);
+	cloud2Rgb.rdbuf()->pubsetbuf(rgbBuffer2.data(), STREAM_BUFFER_SIZE);
+	mergedCloudPos.rdbuf()->pubsetbuf(outputPosBuffer.data(), STREAM_BUFFER_SIZE);
+	mergedCloudRgb.rdbuf()->pubsetbuf(outputRgbBuffer.data(), STREAM_BUFFER_SIZE);
+
+	if (!cloud1Pos.good() || !cloud2Pos.good() || !cloud1Rgb.good() || !cloud2Rgb.good() ||
+		!mergedCloudPos.good() || !mergedCloudRgb.good()) {
+		return false;
+	}
+
+	//
+	std::vector<vec3> batch1Pos, batch2Pos;
+	std::vector<u32> batch1Rgb, batch2Rgb;
+	std::vector<u32> batch1Hilbert, batch2Hilbert;
+
+	batch1Pos.reserve(BATCH_SIZE);
+	batch2Pos.reserve(BATCH_SIZE);
+	batch1Rgb.reserve(BATCH_SIZE);
+	batch2Rgb.reserve(BATCH_SIZE);
+	batch1Hilbert.reserve(BATCH_SIZE);
+	batch2Hilbert.reserve(BATCH_SIZE);
+
+	// Reading a batch of points
+	auto readBatch = [](std::ifstream& posStream, std::ifstream& rgbStream,
+		std::vector<vec3>& posBatch, std::vector<u32>& rgbBatch,
+		std::vector<u32>& hilbertBatch, const AABB& aabb) {
+			posBatch.clear();
+			rgbBatch.clear();
+			hilbertBatch.clear();
+
+			vec3 pos;
+			u32 rgb;
+			for (size_t i = 0; i < BATCH_SIZE; ++i) {
+				posStream.read(reinterpret_cast<char*>(&pos), sizeof(vec3));
+				rgbStream.read(reinterpret_cast<char*>(&rgb), sizeof(u32));
+				if (!posStream || !rgbStream) break;
+
+				posBatch.push_back(pos);
+				rgbBatch.push_back(rgb);
+				hilbertBatch.push_back(PointCloud::hilbert3D(pos, aabb));
 			}
-			if (!cloud1Pos.good())
-				hilbert1 = UINT32_MAX;
-			if (++pointId == meshletSize) {
-				pointId = 0;
-				if (cloud1Pos.good() || cloud2Pos.good()) {
-					mergedCloud._meshlets.emplace_back();
-					currentMeshletAABB = &mergedCloud._meshlets.back().aabb;
-				}
-				if (shouldShuffle) {
-					std::iota(shuffling.begin(), shuffling.end(), 0);
-					std::ranges::shuffle(shuffling, std::default_random_engine(mergedCloud._numPoints));
-					reorder(shuffling, currentMeshletPosition);
-					reorder(shuffling, currentMeshletColor);
-				}
-				mergedCloudPos.write(reinterpret_cast<char*>(currentMeshletPosition.data()), currentMeshletPosition.size() * sizeof(vec3));
-				mergedCloudRgb.write(reinterpret_cast<char*>(currentMeshletColor.data()), currentMeshletColor.size() * sizeof(u32));
-				currentMeshletPosition.clear();
-				currentMeshletColor.clear();
+			return !posBatch.empty();
+		};
+
+	// Read initial batches
+	bool hasMore1 = readBatch(cloud1Pos, cloud1Rgb, batch1Pos, batch1Rgb, batch1Hilbert, mergedAABB);
+	bool hasMore2 = readBatch(cloud2Pos, cloud2Rgb, batch2Pos, batch2Rgb, batch2Hilbert, mergedAABB);
+
+	size_t idx1 = 0, idx2 = 0;
+	u32 pointId = 0;
+	mergedCloud._meshlets.emplace_back();
+	AABB* currentMeshletAABB = &mergedCloud._meshlets.back().aabb;
+	std::vector<vec3> currentMeshletPosition;
+	std::vector<u32> currentMeshletColor;
+	currentMeshletPosition.reserve(meshletSize);
+	currentMeshletColor.reserve(meshletSize);
+	std::vector<u32> shuffling(meshletSize);
+
+	// Merge loop
+	while (hasMore1 || hasMore2) {
+		// Process the point
+		if (hasMore1 && (!hasMore2 || batch1Hilbert[idx1] <= batch2Hilbert[idx2])) {
+			currentMeshletAABB->update(batch1Pos[idx1]);
+			currentMeshletPosition.push_back(batch1Pos[idx1]);
+			currentMeshletColor.push_back(batch1Rgb[idx1]);
+
+			if (++idx1 >= batch1Pos.size()) {
+				hasMore1 = readBatch(cloud1Pos, cloud1Rgb, batch1Pos, batch1Rgb, batch1Hilbert, mergedAABB);
+				idx1 = 0;
 			}
 		}
-		cloud1Pos.close();
-		cloud2Pos.close();
-		cloud1Rgb.close();
-		cloud2Rgb.close();
-		mergedCloudPos.close();
-		mergedCloudRgb.close();
+		else {
+			currentMeshletAABB->update(batch2Pos[idx2]);
+			currentMeshletPosition.push_back(batch2Pos[idx2]);
+			currentMeshletColor.push_back(batch2Rgb[idx2]);
 
-		mergedCloud.computeMetrics("Hilbert");
-		mergedCloud.saveMetadata(rootPath + "\\" + mergedCloud._name);
+			if (++idx2 >= batch2Pos.size()) {
+				hasMore2 = readBatch(cloud2Pos, cloud2Rgb, batch2Pos, batch2Rgb, batch2Hilbert, mergedAABB);
+				idx2 = 0;
+			}
+		}
 
-		std::filesystem::remove(cloudPath1 + ".NimbusCloud");
-		std::filesystem::remove(cloudPath2 + ".NimbusCloud");
-		std::filesystem::remove(cloudPath1 + ".NimbusCloudPos");
-		std::filesystem::remove(cloudPath2 + ".NimbusCloudPos");
-		std::filesystem::remove(cloudPath1 + ".NimbusCloudRGB");
-		std::filesystem::remove(cloudPath2 + ".NimbusCloudRGB");
-		return true;
+		// Handle meshlet completion
+		if (++pointId == meshletSize) {
+			pointId = 0;
+			if (hasMore1 || hasMore2) {
+				mergedCloud._meshlets.emplace_back();
+				currentMeshletAABB = &mergedCloud._meshlets.back().aabb;
+			}
+
+			if (shouldShuffle) {
+				std::iota(shuffling.begin(), shuffling.end(), 0);
+				std::ranges::shuffle(shuffling, std::default_random_engine(mergedCloud._numPoints));
+				reorder(shuffling, currentMeshletPosition);
+				reorder(shuffling, currentMeshletColor);
+			}
+
+			mergedCloudPos.write(reinterpret_cast<char*>(currentMeshletPosition.data()), currentMeshletPosition.size() * sizeof(vec3));
+			mergedCloudRgb.write(reinterpret_cast<char*>(currentMeshletColor.data()), currentMeshletColor.size() * sizeof(u32));
+
+			currentMeshletPosition.clear();
+			currentMeshletColor.clear();
+		}
 	}
-	return false;
+
+	// Close all streams
+	cloud1Pos.close();
+	cloud2Pos.close();
+	cloud1Rgb.close();
+	cloud2Rgb.close();
+	mergedCloudPos.close();
+	mergedCloudRgb.close();
+
+	// Finalize merged cloud
+	mergedCloud.computeMetrics("Hilbert");
+	mergedCloud.saveMetadata(rootPath + "\\" + mergedCloud._name);
+
+	// Cleanup
+	std::filesystem::remove(cloudPath1 + ".NimbusCloud");
+	std::filesystem::remove(cloudPath2 + ".NimbusCloud");
+	std::filesystem::remove(cloudPath1 + ".NimbusCloudPos");
+	std::filesystem::remove(cloudPath2 + ".NimbusCloudPos");
+	std::filesystem::remove(cloudPath1 + ".NimbusCloudRGB");
+	std::filesystem::remove(cloudPath2 + ".NimbusCloudRGB");
+
+	return true;
 }
 
 bool Nimbus::FileManager::loadPointCloud(const std::string& filepath, const bool useClassification) {
@@ -639,7 +1023,7 @@ bool Nimbus::FileManager::loadPointCloud(const std::string& filepath, const bool
 			if (extension == ".las" || extension == ".laz") { //El metodo LAS comprueba si está comprimido o no, por eso se usa el mismo.
 				std::vector<string> t;
 				t.push_back(filepath);
-				return loadMergeLas(t, useClassification);
+				return loadMergeLasParallel(t);
 			}if (extension == ".NimbusCloud")
 				return loadNativeCloud(filePath.string());
 		} catch (std::exception& e) {
@@ -668,7 +1052,8 @@ bool Nimbus::FileManager::loadMergePointClouds(const std::vector<std::string>& f
 			}
 		}
 	}
-	loadMergeLas(filepaths);
+
+	loadMergeLasParallel(filepaths);
 	return true;
 }
 
@@ -709,9 +1094,7 @@ bool Nimbus::FileManager::savePointCloud(const std::string& filename, PointCloud
 		//TODO: Asociar directamente las eedds de la nube, saltandose este paso. Requeriria de un refactor de la nube.
 		auto points = new float[totalPointNumber * 3];
 		auto colors = new float[totalPointNumber * 3];
-		auto classification = new uint8_t[totalPointNumber * 3];
 		saving = true;
-
 
 		const auto& positions = cloud.getPointsPosition();
 		const auto& pointsColor = cloud.getPointsColor();
@@ -725,7 +1108,6 @@ bool Nimbus::FileManager::savePointCloud(const std::string& filename, PointCloud
 			colors[baseIndex] = color.x;
 			colors[baseIndex + 1] = color.y;
 			colors[baseIndex + 2] = color.z;
-			classification[i] = cloud._classification;
 		}
 
 		//Creamos los descriptores necesarios para msh_ply
@@ -763,16 +1145,6 @@ bool Nimbus::FileManager::savePointCloud(const std::string& filename, PointCloud
 			msh_ply_add_descriptor(pf, &normalDesc);
 		}
 
-		msh_ply_desc_t classificationDesc = {
-			.element_name = vertexName,
-			.property_names = classificationNames,
-			.num_properties = 1,
-			.data_type = MSH_PLY_UINT8,
-			.data = &classification,
-			.data_count = &classificationNumber
-		};
-		msh_ply_add_descriptor(pf, &classificationDesc);
-
 		//Escribimos el fichero en disco
 		const auto result = msh_ply_write(pf);
 		if (result != MSH_PLY_NO_ERR) {
@@ -784,7 +1156,6 @@ bool Nimbus::FileManager::savePointCloud(const std::string& filename, PointCloud
 		msh_ply_close(pf);
 		delete[] points;
 		delete[] colors;
-		delete[] classification;
 
 		const auto end = std::chrono::high_resolution_clock::now();
 

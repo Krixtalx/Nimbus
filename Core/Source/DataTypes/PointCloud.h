@@ -1,6 +1,8 @@
 #pragma once
+
 #include <array>
 #include <vector>
+#include <glm/fwd.hpp>
 
 #include "Model3D.h"
 #include "Graphics/GPUResources.h"
@@ -60,7 +62,6 @@ namespace Nimbus {
 			1,      //RGB
 		};
 
-
 		inline static std::array _renderAttributes{
 			"RGB",
 		};
@@ -80,7 +81,6 @@ namespace Nimbus {
 		bool																_meshletsNeedUpdate = false;
 		bool																_optimized = false;
 		bool																_controlledByRenderer = true;
-
 
 		//Render things
 		GPUResources														_GPUResources;
@@ -106,6 +106,8 @@ namespace Nimbus {
 		//Picking things
 		std::vector<u8>														_picked;
 		bool																_pickedNeedUpdate = true;
+
+		bool																_loading = true;
 
 		void reloadAttribute();
 		void updateCloud();
@@ -133,18 +135,15 @@ namespace Nimbus {
 		void recomputeMeshlets();
 
 	public:
-		bool										_loading = true;
-		u16											_classification;
-
 		explicit PointCloud(const std::string& name);
 
-		PointCloud(const std::string& name, const AABB& aabb, const u32& classification = 0, const vec3& pos = { 0,0,0 }, const vec3& rot = { 0,0,0 }, const vec3& scale = { 1,1,1 });
+		PointCloud(const std::string& name, const AABB& aabb, const vec3& pos = { 0,0,0 }, const vec3& rot = { 0,0,0 }, const vec3& scale = { 1,1,1 });
 
-		PointCloud(const std::string& name, const std::vector<VAO::Point>& points, const AABB& aabb, const u32& classification = 0, const vec3& pos = { 0,0,0 }, const vec3& rot = { 0,0,0 }, const vec3& scale = { 1,1,1 });
+		PointCloud(const std::string& name, const std::vector<VAO::Point>& points, const AABB& aabb, const vec3& pos = { 0,0,0 }, const vec3& rot = { 0,0,0 }, const vec3& scale = { 1,1,1 });
 
 		virtual ~PointCloud();
 
-		void spatialOrdering(SortingMethod sortMethod = SortingMethod::Hilbert, bool saveMeshlets = true, bool shuffleMeshlets = true);
+		void spatialOrdering(SortingMethod sortMethod = SortingMethod::Hilbert, bool saveMeshlets = true, bool shuffleMeshlets = true, const bool clearBuffers = true);
 
 		void drawModel(dmat4 viewProjMatrix) override;
 		void needUpdate();
@@ -152,6 +151,7 @@ namespace Nimbus {
 		void addSubcloud(std::unique_ptr<PointCloud> newSubcloud);
 		void addNewPoint(const VAO::Point& newPoint);
 		void addNewPoints(const std::vector<VAO::Point>& newPoints);
+		void addNewPoints(glm::vec3* points, glm::u32* rgb, size_t offset, size_t size, const AABB& aabb);
 		void addNormals(const std::vector<vec3>& normals);
 
 		void setNewPoints(const std::vector<VAO::Point>& newPoints, bool optimizePointOrder = false);
@@ -202,7 +202,7 @@ namespace Nimbus {
 
 		template<Attribute Att>
 		vec2 getAttributeMinMax(u16 band) const;
-		Attribute getCurrentAttribute();
+		Attribute getCurrentAttribute() const;
 	};
 
 	template <Attribute Att>

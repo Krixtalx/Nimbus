@@ -231,7 +231,7 @@ u32 Nimbus::Renderer::generateCompactInfo(PointCloud* pc, u32& prevIndex, u32& c
 	_appState->_renderedPoints[_currentBufferId] = 0;
 	for (auto& pointsToRender : pc->_currentFrameCulling) {
 		if (pointsToRender > 0 && pointsToRender < pc->_meshletSize) {
-			u32 temp = (static_cast<float>(pointsToRender) / std::max(_meshletCullingPointsSum[_currentBufferId], static_cast<GLuint>(1))) * _appState->_pointsBucket;
+			u32 temp = static_cast<float>(pointsToRender) / std::max(_meshletCullingPointsSum[_currentBufferId], static_cast<GLuint>(256)) * _appState->_pointsBucket;
 			pointsToRender = std::min(temp, pc->_meshletSize);
 			_appState->_renderedPoints[_currentBufferId] += pointsToRender;
 		}
@@ -585,7 +585,6 @@ void Nimbus::Renderer::render() {
 
 			glDeleteSync(resetDepthBufferFence);
 			glBlitNamedFramebuffer(_renderFBO->getId(), 0, 0, 0, _renderFBO->getSize().x, _renderFBO->getSize().y, 0, 0, _renderFBO->getSize().x, _renderFBO->getSize().y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
 
 			if (_appState->_renderMeshletsAABBs) {
 				for (const auto& cloud : _scenes[_activeScene]->_pointClouds | std::views::values) {
