@@ -337,7 +337,6 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 			break;
 		}
 
-
 		auto timeMs = ChronoUtilities::getDuration();
 		spdlog::info("Point cloud spatial ordering of {} points in {} ms", _position.size(), timeMs);
 
@@ -400,8 +399,6 @@ void Nimbus::PointCloud::spatialOrdering(const SortingMethod sortMethod, const b
 		_position.clear();
 		_rgbColor.clear();
 
-		_optimized = true;
-		_meshletsNeedUpdate = true;
 		needUpdate();
 		_optimized = true;
 	} catch (std::exception& e) {
