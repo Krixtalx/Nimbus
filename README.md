@@ -7,9 +7,9 @@
 
 ## About
 
-This repository contains the source code for the paper 'Virtualized Point Cloud Rendering', currently submitted to IEEE Transactions on Graphics and Visualization. Our paper is inspired by previous work of the Rendering and Modeling (TU Wien) research group. Their work, and the foundation of ours, is the rasterization of point clouds using compute shaders instead of vertex and fragment shaders. However, one of the remaining drawbacks of this approach is that the point cloud must entirely fit in the GPU VRAM. While some computers out there have a large video memory, commodity hardware typically oscillates between 6 and 12GB. 
+This repository contains the source code for the paper 'Virtualized Point Cloud Rendering', published in the IEEE Transactions on Graphics and Visualization journal. Our paper is inspired by the previous work of the Rendering and Modelling (TU Wien) research group. Their work, and the foundation of ours, is the rasterisation of point clouds using compute shaders instead of vertex and fragment shaders. However, one of the remaining drawbacks of this approach is that the point cloud must entirely fit in the GPU VRAM. While some computers have a large video memory, commodity hardware typically oscillates between 6 and 12 GB. 
 
-In this work, we transfer point cloud data from disk to CPU and GPU as required. Therefore, we avoid having all the data in VRAM at once, hence the *virtualized point cloud rendering*. Points are only transferred as visibility changes, i.e., points gets in the camera's frustum culling and the selected *Level of Detail* includes them.
+In this work, we transfer point cloud data from disk to CPU and GPU as required. Therefore, we avoid having all the data in VRAM at once, hence the *virtualized point cloud rendering*. Points are only transferred as visibility changes, i.e., points get in the camera's frustum culling and the selected *Level of Detail* includes them.
 
 <p align="center">
     <img src="Images/Nimbus.gif"/>
@@ -17,7 +17,7 @@ In this work, we transfer point cloud data from disk to CPU and GPU as required.
 
 ## Features
 
-The main feature of this project is the virtualization of point cloud data. However, some of the drawbacks of previous work remain even with virtualization. For instance, point clouds that do not entirely fit into the VRAM must be subsampled via a Level of Detail (LoD) system. The LoD is kind of a tradeoff between performance and not providing visual cues of missing points. Besides this, we also use a fast hole-filling algorithm that fills gaps as long as there is at least one non-empty pixel in a 3x3 neighborhood (which can be changed). We also offer occlusion checks that help to clean point clouds with several overlapping surfaces, as illustrated in the following image.
+The main feature of this project is the virtualisation of point cloud data. However, some of the drawbacks of previous work remain even with virtualisation. For instance, point clouds that do not entirely fit into the VRAM must be subsampled via a Level of Detail (LoD) system. The LoD is a tradeoff between performance and not providing visual cues of missing points. Besides this, we also use a fast hole-filling algorithm that fills gaps as long as there is at least one non-empty pixel in a 3x3 neighbourhood (which can be changed). We also offer occlusion checks that help to clean point clouds with several overlapping surfaces, as illustrated in the following image.
 
 <p align="center">
     <img src="Images/occlusion_hole_filling.png" style="width:90%;"/>
