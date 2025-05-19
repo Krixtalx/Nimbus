@@ -2,6 +2,7 @@
 
 ![c++](https://img.shields.io/github/languages/top/Krixtalx/Nimbus) 
 ![opengl](https://img.shields.io/badge/-OpenGL_4.6-red?logo=opengl)
+![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Krixtalx/Nimbus/total)
 
 ![License: CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/80x15.png)
 
